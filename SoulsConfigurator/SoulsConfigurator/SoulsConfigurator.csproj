@@ -12,40 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Data\DS1\Dark Souls Enemy Randomizer v0.4.1.2-1407-v0-4-1-2-1550837469.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS1\Dark Souls Item Randomizer v0.3-86-v0-3.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS2\DS2SRandomizer-1317-3-3-1-1747310715.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="Data\DS3\Carthus Worm Banned.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS3\DarkSoulsIII.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS3\DS3 Fog Gate Randomizer-551-v0-2-1644925717.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS3\DS3 Static Item and Enemy Randomizer-361-v0-3-1644921428.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\DS3\ModEngine.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Sekiro\Combined SFX-543-v2-1618274087.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Sekiro\Divine Dragon Textures-543-v1-1588303766.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Sekiro\ModEngine.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Sekiro\Sekiro Randomizer-543-v0-4-1-1622182119.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
