@@ -1,0 +1,141 @@
+name: Create Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  release:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Get current version
+      id: get_version
+      run: |
+        $csprojPath = "SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj"
+        $content = Get-Content $csprojPath -Raw
+        $versionMatch = [regex]::Match($content, '<Version>(\d+)\.(\d+)\.(\d+)\.(\d+)</Version>')
+        
+        if ($versionMatch.Success) {
+          $major = [int]$versionMatch.Groups[1].Value
+          $minor = [int]$versionMatch.Groups[2].Value
+          $patch = [int]$versionMatch.Groups[3].Value
+          $build = [int]$versionMatch.Groups[4].Value
+          
+          Write-Host "Current version: $major.$minor.$patch.$build"
+          
+          # Increment minor version automatically
+          $minor++
+          $patch = 0
+          
+          $newVersion = "$major.$minor.$patch.$build"
+          Write-Host "New version: $newVersion"
+          
+          echo "OLD_VERSION=$major.$minor.$patch.$build" >> $env:GITHUB_OUTPUT
+          echo "NEW_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
+          echo "MAJOR=$major" >> $env:GITHUB_OUTPUT
+          echo "MINOR=$minor" >> $env:GITHUB_OUTPUT
+          echo "PATCH=$patch" >> $env:GITHUB_OUTPUT
+          echo "BUILD=$build" >> $env:GITHUB_OUTPUT
+        } else {
+          Write-Error "Could not find version in csproj file"
+          exit 1
+        }
+      shell: pwsh
+
+    - name: Update version in csproj
+      run: |
+        $csprojPath = "SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj"
+        $content = Get-Content $csprojPath -Raw
+        $newVersion = "${{ steps.get_version.outputs.NEW_VERSION }}"
+        
+        $content = $content -replace '<AssemblyVersion>\d+\.\d+\.\d+\.\d+</AssemblyVersion>', "<AssemblyVersion>$newVersion</AssemblyVersion>"
+        $content = $content -replace '<FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>', "<FileVersion>$newVersion</FileVersion>"
+        $content = $content -replace '<Version>\d+\.\d+\.\d+\.\d+</Version>', "<Version>$newVersion</Version>"
+        
+        Set-Content $csprojPath -Value $content
+        Write-Host "Updated version to $newVersion"
+      shell: pwsh
+
+    - name: Restore dependencies
+      run: dotnet restore SoulsConfigurator/SoulsConfigurator.sln
+
+    - name: Build project
+      run: dotnet build SoulsConfigurator/SoulsConfigurator.sln --configuration Release --no-restore
+
+    - name: Publish application
+      run: |
+        dotnet publish SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj `
+          --configuration Release `
+          --output "publish" `
+          --no-build `
+          --self-contained false
+
+    - name: Create release package
+      run: |
+        $version = "${{ steps.get_version.outputs.NEW_VERSION }}"
+        $zipName = "SoulsModConfigurator-v$version.zip"
+        
+        # Create zip file with the published application
+        Compress-Archive -Path "publish/*" -DestinationPath $zipName
+        
+        echo "RELEASE_ZIP=$zipName" >> $env:GITHUB_OUTPUT
+        Write-Host "Created release package: $zipName"
+      shell: pwsh
+      id: package
+
+    - name: Commit version changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj
+        git commit -m "Bump version to ${{ steps.get_version.outputs.NEW_VERSION }}" || exit 0
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.get_version.outputs.NEW_VERSION }}
+        release_name: Release v${{ steps.get_version.outputs.NEW_VERSION }}
+        body: |
+          ## Changes in v${{ steps.get_version.outputs.NEW_VERSION }}
+          
+          This release was automatically generated.
+          
+          ### What's New
+          - Version bump from previous release
+          - Latest bug fixes and improvements
+          
+          ### Download
+          Download the `SoulsModConfigurator-v${{ steps.get_version.outputs.NEW_VERSION }}.zip` file below and extract it to use the application.
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./${{ steps.package.outputs.RELEASE_ZIP }}
+        asset_name: ${{ steps.package.outputs.RELEASE_ZIP }}
+        asset_content_type: application/zip
