@@ -18,6 +18,7 @@ namespace SoulsConfigurator.Services
             _availableGames = new List<IGame>
             {
                 // Only DS3 and Sekiro are fully implemented for now
+                new Game_DS2(),
                 new Game_DS3(),
                 new Game_Sekiro()
                 
