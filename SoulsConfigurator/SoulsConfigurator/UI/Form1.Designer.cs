@@ -24,6 +24,9 @@ namespace SoulsConfigurator
                 // Dispose download service
                 _downloadService?.Dispose();
                 
+                // Dispose version check service
+                _versionCheckService?.Dispose();
+                
                 if (components != null)
                 {
                     components.Dispose();

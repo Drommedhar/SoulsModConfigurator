@@ -11,6 +11,7 @@ namespace SoulsConfigurator
         private readonly GameManagerService _gameManager;
         private readonly UserPresetService _presetService;
         private readonly ModDownloadService _downloadService;
+        private readonly VersionCheckService _versionCheckService;
         private FolderBrowserDialog? _folderBrowserDialog;
         private readonly Dictionary<string, ComboBox> _modPresetComboBoxes;
 
@@ -20,6 +21,7 @@ namespace SoulsConfigurator
             _gameManager = new GameManagerService();
             _presetService = new UserPresetService();
             _downloadService = new ModDownloadService();
+            _versionCheckService = new VersionCheckService();
             _modPresetComboBoxes = new Dictionary<string, ComboBox>();
             
             // Subscribe to preset change events
@@ -151,6 +153,9 @@ namespace SoulsConfigurator
             
             // Set initial status message
             UpdateStatusMessage();
+            
+            // Check for updates asynchronously
+            _ = CheckForUpdatesAsync();
         }
 
         private void cmbGames_SelectedIndexChanged(object sender, EventArgs e)
@@ -819,6 +824,40 @@ namespace SoulsConfigurator
                 {
                     _folderBrowserDialog.Description = _gameManager.GetValidationMessage();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Checks for application updates asynchronously
+        /// </summary>
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                var result = await _versionCheckService.CheckForUpdatesAsync();
+                
+                if (result.IsUpdateAvailable)
+                {
+                    // Show the update dialog on the UI thread
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => _versionCheckService.ShowUpdateDialog(result)));
+                    }
+                    else
+                    {
+                        _versionCheckService.ShowUpdateDialog(result);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    // Optionally log the error, but don't show it to the user as it's not critical
+                    System.Diagnostics.Debug.WriteLine($"Version check failed: {result.ErrorMessage}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't show it to the user
+                System.Diagnostics.Debug.WriteLine($"Version check exception: {ex.Message}");
             }
         }
     }
