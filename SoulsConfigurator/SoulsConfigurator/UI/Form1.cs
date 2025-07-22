@@ -10,6 +10,7 @@ namespace SoulsConfigurator
     {
         private readonly GameManagerService _gameManager;
         private readonly UserPresetService _presetService;
+        private readonly ModDownloadService _downloadService;
         private FolderBrowserDialog? _folderBrowserDialog;
         private readonly Dictionary<string, ComboBox> _modPresetComboBoxes;
 
@@ -18,6 +19,7 @@ namespace SoulsConfigurator
             InitializeComponent();
             _gameManager = new GameManagerService();
             _presetService = new UserPresetService();
+            _downloadService = new ModDownloadService();
             _modPresetComboBoxes = new Dictionary<string, ComboBox>();
             
             // Subscribe to preset change events
@@ -400,7 +402,50 @@ namespace SoulsConfigurator
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
+            
+            // Map game names to download service format
+            string downloadGameName = selectedGame.Name switch
+            {
+                "Dark Souls 3" => "DS3",
+                "Sekiro: Shadows Die Twice" => "Sekiro",
+                _ => selectedGame.Name
+            };
+            
+            // Process any manually downloaded files to create expected filenames
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _downloadService.CreateExpectedFilenamesForGame(downloadGameName);
+                    
+                    // Refresh the UI on the main thread after processing
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => ShowMissingFilesInfoAfterProcessing(selectedGame, downloadGameName)));
+                    }
+                    else
+                    {
+                        ShowMissingFilesInfoAfterProcessing(selectedGame, downloadGameName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error processing filenames: {ex.Message}");
+                    // Fallback to original logic
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() => ShowMissingFilesInfoAfterProcessing(selectedGame, downloadGameName)));
+                    }
+                    else
+                    {
+                        ShowMissingFilesInfoAfterProcessing(selectedGame, downloadGameName);
+                    }
+                }
+            });
+        }
+        
+        private void ShowMissingFilesInfoAfterProcessing(IGame selectedGame, string downloadGameName)
+        {
             var allMods = selectedGame.Mods;
             var missingMods = allMods.Where(mod => !mod.IsAvailable()).ToList();
 
@@ -449,12 +494,12 @@ namespace SoulsConfigurator
             if (missingMods.Any() || missingPrerequisites.Any())
             {
                 var message = new System.Text.StringBuilder();
-                message.AppendLine("The following files are missing:");
+                message.AppendLine($"File Status for {selectedGame.Name}:");
                 message.AppendLine();
 
                 if (missingPrerequisites.Any())
                 {
-                    message.AppendLine("PREREQUISITES (required for all mods):");
+                    message.AppendLine("MISSING PREREQUISITES (required for all mods):");
                     foreach (var prerequisite in missingPrerequisites)
                     {
                         message.AppendLine(prerequisite);
@@ -464,7 +509,7 @@ namespace SoulsConfigurator
 
                 if (missingMods.Any())
                 {
-                    message.AppendLine("MODS:");
+                    message.AppendLine("MISSING MOD FILES:");
                     var missingFilesList = missingMods.Select(mod => 
                         $"• {mod.Name} - Missing: {mod.ModFile}");
                     foreach (var missingFile in missingFilesList)
@@ -474,15 +519,23 @@ namespace SoulsConfigurator
                     message.AppendLine();
                 }
 
-                message.AppendLine($"Please download these files and place them in the '{selectedGame.ModFolder}' directory.");
+                message.AppendLine($"These files should be placed in: {selectedGame.ModFolder}");
+                message.AppendLine();
+                message.AppendLine("NOTE: The app automatically detects files with different names from Nexus Mods.");
+                message.AppendLine("Would you like to automatically download the missing files using Nexus Mods integration?");
                 
-                MessageBox.Show(message.ToString(), "Missing Mod Files", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                var result = MessageBox.Show(message.ToString(), "Missing Mod Files", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                    
+                if (result == DialogResult.Yes)
+                {
+                    OpenDownloadManager(selectedGame.Name);
+                }
             }
             else
             {
-                MessageBox.Show("✓ All mod files and prerequisites are available for installation!", 
-                    "Files Status", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"✓ All mod files and prerequisites are available for {selectedGame.Name}!\n\nAll required files are present in: {selectedGame.ModFolder}", 
+                    "All Files Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -498,6 +551,7 @@ namespace SoulsConfigurator
             btnClearMods.Enabled = enabled;
             btnConfigureMod.Enabled = enabled; // Always enable to check file status
             btnConfigureMod.Text = "Check Files"; // Update button text
+            btnDownloadFiles.Enabled = enabled; // Enable/disable download button
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -693,6 +747,36 @@ namespace SoulsConfigurator
         {
             // Repurpose this button to show file availability information
             ShowMissingFilesInfo();
+        }
+
+        private void btnDownloadFiles_Click(object sender, EventArgs e)
+        {
+            var selectedGame = _gameManager.GetSelectedGame();
+            if (selectedGame == null)
+            {
+                MessageBox.Show("Please select a game first.", "No Game Selected", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            OpenDownloadManager(selectedGame.Name);
+        }
+
+        private void OpenDownloadManager(string gameName)
+        {
+            // Map game names to the folder structure expected by the download service
+            string downloadGameName = gameName switch
+            {
+                "Dark Souls 3" => "DS3",
+                "Sekiro: Shadows Die Twice" => "Sekiro",
+                _ => gameName
+            };
+
+            using var downloadForm = new DownloadProgressForm(_downloadService, downloadGameName);
+            downloadForm.ShowDialog(this);
+            
+            // Refresh the mod list after download to update availability status
+            LoadModsForSelectedGame();
         }
 
         private void UpdateStatusMessage()

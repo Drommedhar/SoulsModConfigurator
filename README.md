@@ -16,6 +16,188 @@ Currently, SoulsConfigurator supports:
 
 ## Features
 
+### 🎯 Game Management
+- Automatic game detection and validation
+- Support for custom installation paths
+- Built-in game file backup and restoration
+- Automatic prerequisite installation (Mod Engine, crash fixes)
+
+### 📦 Automatic Mod Downloads
+- Integrated Nexus Mods download manager
+- Simple API key authentication
+- Automatic file placement and naming
+- Real-time download progress tracking
+- Support for both Nexus Mods and direct downloads
+- Missing file detection and bulk downloads
+
+### ⚙️ Mod Configuration
+- Intuitive graphical interface for mod settings
+- Real-time configuration validation
+- Organized option groups for easy navigation
+- Support for various control types (checkboxes, radio buttons, text fields)
+
+### 🔄 User Presets
+- Save and load custom mod configurations
+- Share configurations between sessions
+- Delete unwanted presets
+- Quick preset selection and application
+
+### 🤖 Automation
+- Automated mod installation and extraction
+- Automatic mod executable launching with pre-configured settings
+- Real-time status monitoring during randomization
+- Automatic cleanup of temporary files
+
+### 🛡️ Safety Features
+- Automatic game file backup before mod installation
+- Complete mod removal with file restoration
+- Error handling and validation throughout the process
+- Safe configuration management
+
+## Installation
+
+### Prerequisites
+- Windows 10/11
+- .NET 8 Runtime
+- Valid installation of supported Dark Souls games
+- Internet connection for automatic mod downloads
+
+### Setup
+1. Download the latest release of SoulsConfigurator
+2. Extract to a folder of your choice
+3. Run `SoulsConfigurator.exe`
+4. Use the built-in download manager to automatically get mod files (recommended)
+   - OR manually download and place the required mod files (see "Manual Mod Files Setup" section below)
+
+## Automatic Mod Download
+
+SoulsConfigurator now includes an integrated download manager that can automatically download all required mod files from Nexus Mods and other sources.
+
+### How to Use
+
+1. **Get API Key**: Get your free API key from [Nexus Mods API Settings](https://next.nexusmods.com/settings/api-keys)
+2. **Select Your Game**: Choose your game from the dropdown
+3. **Set Installation Path**: Click "Browse" and navigate to your game installation folder
+4. **Download Files**: Click the "Download Files" button to open the download manager
+5. **Enter API Key**: Paste your API key and click "Set API Key" to authenticate
+6. **Start Download**: Click "Start Download" to automatically download all missing files
+
+The download manager will:
+- Check which files are already present
+- Download only missing files
+- Place files in the correct directory structure
+- Show real-time download progress
+- Handle both Nexus Mods files and direct downloads
+
+### Supported Downloads
+
+The automatic download system can download:
+
+#### Dark Souls 3:
+- DS3 Fog Gate Randomizer (from Nexus Mods)
+- DS3 Static Item and Enemy Randomizer (from Nexus Mods)
+- Mod Engine (from Nexus Mods)
+- Crash Fix 1.15 (from Souls Speedruns)
+
+#### Sekiro:
+- Sekiro Randomizer with prerequisites (from Nexus Mods)
+- Mod Engine (from Nexus Mods)
+
+### Authentication
+
+The download manager uses Nexus Mods' API key system:
+- Free API key from your Nexus Mods account
+- Simple copy-paste authentication
+- Secure API-based authentication
+- Persistent authentication across sessions
+
+**Getting Your API Key**:
+1. Visit [Nexus Mods API Settings](https://next.nexusmods.com/settings/api-keys)
+2. Log in to your Nexus Mods account (create one if needed - it's free)
+3. Click "Generate API Key" 
+4. Copy the generated key
+5. Paste it into SoulsConfigurator's download manager
+
+## Manual Mod Files Setup
+
+If you prefer to download mod files manually or the automatic download system is not available, you can still manually download and place the required mod files.
+
+### Required Downloads
+
+Before using SoulsConfigurator, you need to download the mod files and place them in the correct Data folder structure.
+
+#### Dark Souls 3 Mods
+
+- **DS3 Fog Gate Randomizer**: Download from [Nexus Mods](https://www.nexusmods.com/darksouls3/mods/551)
+- **DS3 Static Item and Enemy Randomizer**: Download from [Nexus Mods](https://www.nexusmods.com/darksouls3/mods/361)
+- **Mod Engine**: Download from [Nexus Mods](https://www.nexusmods.com/darksouls3/mods/332)
+
+#### Sekiro Mods
+
+- **Sekiro Randomizer** (includes 2 prerequisites): Download from [Nexus Mods](https://www.nexusmods.com/sekiro/mods/543)
+- **Mod Engine**: Download from [Nexus Mods](https://www.nexusmods.com/sekiro/mods/6)
+
+### Data Folder Structure
+
+Create the following folder structure in your SoulsConfigurator directory:
+
+```
+SoulsConfigurator/
+├── Data/
+│   ├── DS3/
+│   │   ├── DS3_Item_Enemy_Randomizer.zip
+│   │   ├── DS3_FogGate_Randomizer.zip
+│   │   ├── ModEngine.zip
+│   │   ├── DarkSoulsIII.exe
+│   └── Sekiro/
+│       ├── Sekiro_Randomizer.zip
+│       ├── Combined_SFX.zip
+│       ├── Divine_Dragon_Textures.zip
+│       └── ModEngine.zip
+```
+
+### File Naming Requirements
+
+**Important**: The mod files must be named exactly as shown above. SoulsConfigurator looks for these specific filenames:
+
+**Note**: When downloading from Nexus Mods, the files may have different names or additional text. You must rename them to match the exact filenames listed above for SoulsConfigurator to recognize them.
+
+**Tip**: Use the automatic download manager instead of manual downloads to avoid naming issues and ensure all files are correctly placed.
+
+## Usage
+
+### First Time Setup
+
+1. **Select Your Game**: Choose "Dark Souls 3" from the game dropdown
+2. **Set Installation Path**: Click "Browse" and navigate to your Dark Souls 3 installation folder (usually contains `DarkSoulsIII.exe`)
+3. **Verify Installation**: The status should show "✓ Dark Souls 3 - Ready to install mods"
+4. **Download Mod Files**: Click "Download Files" to use the automatic download manager, or ensure all files are manually placed in the Data folder
+
+### Downloading Mods (Recommended Method)
+
+1. **Open Download Manager**: Click the "Download Files" button on the main interface
+2. **Get API Key**: Visit [Nexus Mods API Settings](https://next.nexusmods.com/settings/api-keys) to get your free API key
+3. **Enter API Key**: Paste your API key into the download manager and click "Set API Key"
+4. **Start Download**: Click "Start Download" to automatically download all missing mod files
+5. **Monitor Progress**: Watch the real-time download progress and logs
+6. **Completion**: All files will be automatically placed in the correct directories
+
+### Installing Mods
+
+## Overview
+
+SoulsConfigurator is a Windows Forms application built with .NET 8 that provides an intuitive interface for installing, configuring, and managing mods for Dark Souls games. The application automates the complex process of mod installation and configuration, making it accessible to users who want to enjoy randomized gameplay without dealing with technical details.
+
+## Supported Games
+
+Currently, SoulsConfigurator supports:
+
+- **Dark Souls 3** with the following mods:
+  - DS3 Static Item and Enemy Randomizer
+  - DS3 Fog Gate Randomizer
+
+## Features
+
 ### ?? Game Management
 - Automatic game detection and validation
 - Support for custom installation paths
@@ -52,14 +234,67 @@ Currently, SoulsConfigurator supports:
 - Windows 10/11
 - .NET 8 Runtime
 - Valid installation of supported Dark Souls games
+- Internet connection for automatic mod downloads
 
 ### Setup
 1. Download the latest release of SoulsConfigurator
 2. Extract to a folder of your choice
-3. Download and place the required mod files (see "Mod Files Setup" section below)
-4. Run `SoulsConfigurator.exe`
+3. Run `SoulsConfigurator.exe`
+4. Use the built-in download manager to automatically get mod files (recommended)
+   - OR manually download and place the required mod files (see "Manual Mod Files Setup" section below)
 
-## Mod Files Setup
+## Automatic Mod Download
+
+SoulsConfigurator now includes an integrated download manager that can automatically download all required mod files from Nexus Mods and other sources.
+
+### How to Use
+
+1. **Get API Key**: Get your free API key from [Nexus Mods API Settings](https://next.nexusmods.com/settings/api-keys)
+2. **Select Your Game**: Choose your game from the dropdown
+3. **Set Installation Path**: Click "Browse" and navigate to your game installation folder
+4. **Download Files**: Click the "Download Files" button to open the download manager
+5. **Enter API Key**: Paste your API key and click "Set API Key" to authenticate
+6. **Start Download**: Click "Start Download" to automatically download all missing files
+
+The download manager will:
+- Check which files are already present
+- Download only missing files
+- Place files in the correct directory structure
+- Show real-time download progress
+- Handle both Nexus Mods files and direct downloads
+
+### Supported Downloads
+
+The automatic download system can download:
+
+#### Dark Souls 3:
+- DS3 Fog Gate Randomizer (from Nexus Mods)
+- DS3 Static Item and Enemy Randomizer (from Nexus Mods)
+- Mod Engine (from Nexus Mods)
+- Crash Fix 1.15 (from Souls Speedruns)
+
+#### Sekiro:
+- Sekiro Randomizer with prerequisites (from Nexus Mods)
+- Mod Engine (from Nexus Mods)
+
+### Authentication
+
+The download manager uses Nexus Mods' API key system:
+- Free API key from your Nexus Mods account
+- Simple copy-paste authentication
+- Secure API-based authentication
+- Persistent authentication across sessions
+
+**Getting Your API Key**:
+1. Visit [Nexus Mods API Settings](https://next.nexusmods.com/settings/api-keys)
+2. Log in to your Nexus Mods account (create one if needed - it's free)
+3. Click "Generate API Key" 
+4. Copy the generated key
+5. Paste it into SoulsConfigurator's download manager
+
+## Manual Mod Files Setup
+
+If you prefer to download mod files manually or the automatic download system is not available, you can still manually download and place the required mod files.
 
 ### Required Downloads
 
@@ -113,6 +348,8 @@ SoulsConfigurator/
 - `ModEngine.zip`
 
 **Note**: When downloading from Nexus Mods, the files may have different names or additional text. You must rename them to match the exact filenames listed above for SoulsConfigurator to recognize them.
+
+**Tip**: Use the automatic download manager instead of manual downloads to avoid naming issues and ensure all files are correctly placed.
 
 ## Usage
 
@@ -216,10 +453,30 @@ SoulsConfigurator/
 - Verify the folder contains `DarkSoulsIII.exe`
 - Try running SoulsConfigurator as administrator
 
+**Download Authentication Fails:**
+- Ensure you have a valid Nexus Mods account (free registration)
+- Get your API key from https://next.nexusmods.com/settings/api-keys
+- Make sure you copied the entire API key correctly
+- Check that your Nexus Mods account is in good standing
+- Verify your internet connection
+
+**Download Fails or Hangs:**
+- Check your internet connection
+- Ensure Nexus Mods isn't experiencing server issues
+- Try downloading individual files instead of bulk download
+- Verify you have sufficient disk space
+
+**Missing Files After Download:**
+- Check that downloads completed successfully in the log
+- Verify files are in the correct Data subfolder (DS3/Sekiro)
+- Some downloads may require manual browser completion
+- Use "Check Files" button to verify file availability
+
 **Mod Installation Fails:**
 - Check that your game installation is not corrupted
 - Ensure you have sufficient disk space
 - Verify that antivirus software isn't blocking the installation
+- Make sure all required mod files were downloaded successfully
 
 **Randomization Process Hangs:**
 - The process may take several minutes for complex randomizations

@@ -8,7 +8,7 @@ namespace SoulsConfigurator.Mods.Sekiro
     public class SekiroMod_DivineDragonTextures : IMod
     {
         public string Name => "Sekiro Divine Dragon Textures";
-        public string ModFile => "Divine Dragon Textures-543-v1-1588303766.zip";
+        public string ModFile => "Divine_Dragon_Textures.zip";
 
         public bool IsAvailable()
         {

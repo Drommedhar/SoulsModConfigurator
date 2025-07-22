@@ -17,7 +17,7 @@ namespace SoulsConfigurator.Mods.DS3
     public class DS3Mod_Item_Enemy : IMod, IConfigurableMod
     {
         public string Name => "DS3 Item & Enemy Randomizer";
-        public string ModFile => "DS3 Static Item and Enemy Randomizer-361-v0-3-1644921428.zip";
+        public string ModFile => "DS3_Item_Enemy_Randomizer.zip";
 
         public bool IsAvailable()
         {

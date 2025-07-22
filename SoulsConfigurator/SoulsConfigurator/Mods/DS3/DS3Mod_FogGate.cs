@@ -17,7 +17,7 @@ namespace SoulsConfigurator.Mods.DS3
     public class DS3Mod_FogGate : IMod, IConfigurableMod
     {
         public string Name => "DS3 Fog Gate Randomizer";
-        public string ModFile => "DS3 Fog Gate Randomizer-551-v0-2-1644925717.zip";
+        public string ModFile => "DS3_FogGate_Randomizer.zip";
 
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;

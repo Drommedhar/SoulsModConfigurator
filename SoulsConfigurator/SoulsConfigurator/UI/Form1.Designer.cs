@@ -21,6 +21,9 @@ namespace SoulsConfigurator
                     _presetService.PresetChanged -= OnPresetChanged;
                 }
                 
+                // Dispose download service
+                _downloadService?.Dispose();
+                
                 if (components != null)
                 {
                     components.Dispose();
@@ -46,6 +49,7 @@ namespace SoulsConfigurator
             btnInstallMods = new Button();
             btnClearMods = new Button();
             btnConfigureMod = new Button();
+            btnDownloadFiles = new Button();
             lblStatus = new Label();
             panelModsContainer = new Panel();
             SuspendLayout();
@@ -141,6 +145,17 @@ namespace SoulsConfigurator
             btnConfigureMod.UseVisualStyleBackColor = true;
             btnConfigureMod.Click += btnConfigureMod_Click;
             // 
+            // btnDownloadFiles
+            // 
+            btnDownloadFiles.Location = new Point(445, 285); // Next to Check Files button
+            btnDownloadFiles.Margin = new Padding(3, 2, 3, 2);
+            btnDownloadFiles.Name = "btnDownloadFiles";
+            btnDownloadFiles.Size = new Size(131, 26);
+            btnDownloadFiles.TabIndex = 12;
+            btnDownloadFiles.Text = "Download Files";
+            btnDownloadFiles.UseVisualStyleBackColor = true;
+            btnDownloadFiles.Click += btnDownloadFiles_Click;
+            // 
             // lblStatus
             // 
             lblStatus.AutoSize = true;
@@ -164,6 +179,7 @@ namespace SoulsConfigurator
             ClientSize = new Size(730, 350); // Increased width to 730 and height to 350
             Controls.Add(panelModsContainer);
             Controls.Add(lblStatus);
+            Controls.Add(btnDownloadFiles);
             Controls.Add(btnConfigureMod);
             Controls.Add(btnClearMods);
             Controls.Add(btnInstallMods);
@@ -194,6 +210,7 @@ namespace SoulsConfigurator
         private Button btnInstallMods;
         private Button btnClearMods;
         private Button btnConfigureMod;
+        private Button btnDownloadFiles;
         private Label lblStatus;
         private Panel panelModsContainer;
     }

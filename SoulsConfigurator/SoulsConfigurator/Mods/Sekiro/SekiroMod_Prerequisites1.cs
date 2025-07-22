@@ -8,7 +8,7 @@ namespace SoulsConfigurator.Mods.Sekiro
     public class SekiroMod_CombinedSFX : IMod
     {
         public string Name => "Sekiro Combined SFX";
-        public string ModFile => "Combined SFX-543-v2-1618274087.zip";
+        public string ModFile => "Combined_SFX.zip";
 
         public bool IsAvailable()
         {

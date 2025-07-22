@@ -16,7 +16,7 @@ namespace SoulsConfigurator.Mods.Sekiro
     public class SekiroMod_Randomizer : IMod, IConfigurableMod
     {
         public string Name => "Sekiro Enemy and Item Randomizer";
-        public string ModFile => "Sekiro Randomizer-543-v0-4-1-1622182119.zip";
+        public string ModFile => "Sekiro_Randomizer.zip";
 
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;
