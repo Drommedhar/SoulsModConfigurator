@@ -767,6 +767,7 @@ namespace SoulsConfigurator
             // Map game names to the folder structure expected by the download service
             string downloadGameName = gameName switch
             {
+                "Dark Souls 2" => "DS2",
                 "Dark Souls 3" => "DS3",
                 "Sekiro: Shadows Die Twice" => "Sekiro",
                 _ => gameName

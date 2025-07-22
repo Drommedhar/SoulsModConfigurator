@@ -21,6 +21,15 @@ namespace SoulsConfigurator.Services
         // Mod download configurations - Updated to use latest files dynamically
         private static readonly Dictionary<string, ModDownloadInfo> ModDownloads = new()
         {
+            // Dark Souls 2 mods
+            ["DS2_Randomizer"] = new ModDownloadInfo
+            {
+                GameDomain = "darksouls2",
+                ModId = 1317,
+                FileName = "DS2_Randomizer.zip", // Generic name, will use latest file
+                OutputFolder = "DS2"
+            },
+
             // Dark Souls 3 mods
             ["DS3_FogGate"] = new ModDownloadInfo
             {

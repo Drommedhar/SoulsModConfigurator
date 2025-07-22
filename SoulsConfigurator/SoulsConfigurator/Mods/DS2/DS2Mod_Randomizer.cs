@@ -19,7 +19,7 @@ namespace SoulsConfigurator.Mods.DS2
     public class DS2Mod_Randomizer : IMod, IConfigurableMod
     {
         public string Name => "DS2 Item & Enemy Randomizer";
-        public string ModFile => "DS2SRandomizer.zip";
+        public string ModFile => "DS2_Randomizer.zip";
 
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;
