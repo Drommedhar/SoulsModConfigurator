@@ -3,6 +3,8 @@ name: Create Release
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/**'
 
 jobs:
   release:
@@ -14,6 +16,7 @@ jobs:
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
+        persist-credentials: true
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -100,13 +103,8 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj
-        git commit -m "Bump version to ${{ steps.get_version.outputs.NEW_VERSION }}" || exit 0
-
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+        git commit -m "[skip ci] Bump version to ${{ steps.get_version.outputs.NEW_VERSION }}" || exit 0
+        git push
 
     - name: Create Release
       id: create_release
