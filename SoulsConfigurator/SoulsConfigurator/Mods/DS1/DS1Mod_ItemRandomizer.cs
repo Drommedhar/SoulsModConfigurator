@@ -61,6 +61,36 @@ namespace SoulsConfigurator.Mods.DS1
         {
             try
             {
+                // First, revert the game data to vanilla
+                string randomizerPath = Path.Combine(destPath, "randomizer_gui.exe");
+                if (File.Exists(randomizerPath))
+                {
+                    try
+                    {
+                        ProcessStartInfo processInfo = new ProcessStartInfo
+                        {
+                            FileName = randomizerPath,
+                            WorkingDirectory = destPath,
+                            Arguments = "--revert",
+                            UseShellExecute = true,
+                            CreateNoWindow = false
+                        };
+
+                        using (var process = Process.Start(processInfo))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit();
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Continue with cleanup even if revert fails
+                    }
+                }
+
+                // Now remove the mod files
                 string[] filesToRemove = {
                     "randomizer.ini",
                     "randomizer_gui.exe"
