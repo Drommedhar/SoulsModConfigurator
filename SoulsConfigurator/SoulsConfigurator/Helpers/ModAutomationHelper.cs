@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -16,13 +19,147 @@ namespace SoulsConfigurator.Helpers
         #region Status Detection
 
         /// <summary>
-        /// Waits for randomization to complete by monitoring status bar background color
+        /// Waits for DS2 randomization to complete by looking for green success text at the bottom
         /// </summary>
         /// <param name="mainWindow">Main window handle</param>
-        /// <param name="maxWaitTimeMs">Maximum wait time in milliseconds (default: 60 seconds)</param>
+        /// <param name="maxWaitTimeMs">Maximum wait time in milliseconds (default: 30 seconds)</param>
         /// <param name="checkIntervalMs">Check interval in milliseconds (default: 500ms)</param>
         /// <returns>True if randomization completed successfully, false if failed or timed out</returns>
-        public static bool WaitForRandomizationComplete(IntPtr mainWindow, int maxWaitTimeMs = 60000, int checkIntervalMs = 500)
+        public static bool WaitForDS2RandomizationComplete(IntPtr mainWindow, int maxWaitTimeMs = 30000, int checkIntervalMs = 500)
+        {
+            int elapsedTime = 0;
+            System.Diagnostics.Debug.WriteLine("Starting to monitor for DS2 randomization completion...");
+
+            while (elapsedTime < maxWaitTimeMs)
+            {
+                // For DS2 Randomizer, we need to check for green text at the bottom
+                // Since it uses a custom UI, we'll look for specific color patterns in the bottom area
+                if (GetWindowRect(mainWindow, out RECT windowRect))
+                {
+                    int windowWidth = windowRect.right - windowRect.left;
+                    int windowHeight = windowRect.bottom - windowRect.top;
+                    
+                    // Check bottom area for green pixels (indicating success text)
+                    if (CheckForGreenTextInBottomArea(mainWindow, windowWidth, windowHeight))
+                    {
+                        System.Diagnostics.Debug.WriteLine("DS2 Randomization completed successfully (green text detected)");
+                        return true;
+                    }
+                }
+
+                Thread.Sleep(checkIntervalMs);
+                elapsedTime += checkIntervalMs;
+                
+                if (elapsedTime % 5000 == 0) // Log every 5 seconds
+                {
+                    System.Diagnostics.Debug.WriteLine($"Still waiting for DS2 randomization... {elapsedTime/1000}s elapsed");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine("DS2 Randomization timed out");
+            return false;
+        }
+
+        /// <summary>
+        /// Checks for green text in the bottom area of the DS2 Randomizer window
+        /// </summary>
+        private static bool CheckForGreenTextInBottomArea(IntPtr windowHandle, int windowWidth, int windowHeight)
+        {
+            try
+            {
+                // Get the window rectangle in screen coordinates
+                if (!GetWindowRect(windowHandle, out RECT windowRect))
+                    return false;
+
+                // Define much smaller capture area - only bottom 60 pixels where green text appears
+                int bottomStartY = Math.Max(0, windowHeight - 60); // Only bottom 60 pixels
+                int captureWidth = Math.Min(windowWidth, 400); // Max 400 pixels wide
+                int captureHeight = windowHeight - bottomStartY;
+
+                System.Diagnostics.Debug.WriteLine($"Capturing area: {captureWidth}x{captureHeight} at y={bottomStartY}");
+
+                // Get screen DC instead of window DC
+                IntPtr screenDC = GetDC(IntPtr.Zero);
+                if (screenDC == IntPtr.Zero)
+                    return false;
+
+                try
+                {
+                    // Create bitmap to save the captured area
+                    using (Bitmap bitmap = new Bitmap(captureWidth, captureHeight))
+                    {
+                        bool foundGreen = false;
+                        int greenPixelCount = 0;
+
+                        // Calculate screen coordinates for the capture area
+                        int screenX = windowRect.left;
+                        int screenY = windowRect.top + bottomStartY;
+
+                        // Fast sampling - only check every 8th pixel for maximum speed
+                        int sampleStep = 8; // Sample every 8th pixel for maximum speed
+                        for (int x = 0; x < captureWidth; x += sampleStep)
+                        {
+                            for (int y = 0; y < captureHeight; y += sampleStep)
+                            {
+                                // Get pixel from screen coordinates
+                                uint pixel = GetPixel(screenDC, screenX + x, screenY + y);
+                                
+                                // Extract RGB components
+                                int red = (int)(pixel & 0xFF);
+                                int green = (int)((pixel >> 8) & 0xFF);
+                                int blue = (int)((pixel >> 16) & 0xFF);
+
+                                // Check for green text FIRST before bitmap operations
+                                // Look for pixels where green is dominant and reasonably bright
+                                if (green > 120 && green > red && green > blue && (green - red) > 10 && (green - blue) > 10)
+                                {
+                                    foundGreen = true;
+                                    greenPixelCount++;
+                                    System.Diagnostics.Debug.WriteLine($"Found green pixel #{greenPixelCount} at screen({screenX + x},{screenY + y}) window({x},{y + bottomStartY}): R={red}, G={green}, B={blue}");
+                                    
+                                    // Exit IMMEDIATELY on first green pixel found
+                                    System.Diagnostics.Debug.WriteLine($"Green pixel detected, exiting search immediately");
+                                    goto ExitLoops;
+                                }
+
+                                // Only fill bitmap if we haven't found green yet (for debugging)
+                                Color pixelColor = Color.FromArgb(red, green, blue);
+                                for (int fx = 0; fx < sampleStep && x + fx < captureWidth; fx++)
+                                {
+                                    for (int fy = 0; fy < sampleStep && y + fy < captureHeight; fy++)
+                                    {
+                                        bitmap.SetPixel(x + fx, y + fy, pixelColor);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        ExitLoops:
+
+                        return foundGreen;
+                    }
+                }
+                finally
+                {
+                    ReleaseDC(IntPtr.Zero, screenDC);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error checking for green text: {ex.Message}");
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Waits for randomization to complete by monitoring status bar color changes
+        /// </summary>
+        /// <param name="mainWindow">Main window handle</param>
+        /// <param name="maxWaitTimeMs">Maximum wait time in milliseconds (default: 30 seconds)</param>
+        /// <param name="checkIntervalMs">Check interval in milliseconds (default: 500ms)</param>
+        /// <returns>True if randomization completed successfully, false if failed or timed out</returns>
+        public static bool WaitForRandomizationComplete(IntPtr mainWindow, int maxWaitTimeMs = 30000, int checkIntervalMs = 500)
         {
             int elapsedTime = 0;
 
@@ -563,9 +700,46 @@ namespace SoulsConfigurator.Helpers
             return text.ToString();
         }
 
+        /// <summary>
+        /// Performs a mouse click at the specified coordinates relative to a window
+        /// </summary>
+        /// <param name="windowHandle">Handle to the target window</param>
+        /// <param name="x">X coordinate relative to the window</param>
+        /// <param name="y">Y coordinate relative to the window</param>
+        /// <returns>True if the click was performed successfully</returns>
+        public static bool ClickAtCoordinates(IntPtr windowHandle, int x, int y)
+        {
+            try
+            {
+                // Convert window-relative coordinates to screen coordinates
+                POINT point = new POINT { x = x, y = y };
+                if (!ClientToScreen(windowHandle, ref point))
+                    return false;
+
+                // Move cursor to the target position
+                SetCursorPos(point.x, point.y);
+                Thread.Sleep(50); // Small delay to ensure cursor movement
+
+                // Perform left mouse button down and up
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                Thread.Sleep(50);
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ClickAtCoordinates error: {ex.Message}");
+                return false;
+            }
+        }
+
         #endregion
 
         #region Win32 API
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr FindWindow(string? className, string? windowTitle);
 
         [DllImport("user32.dll")]
         public static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string? className, string? windowTitle);
@@ -592,6 +766,9 @@ namespace SoulsConfigurator.Helpers
         public static extern IntPtr GetWindowDC(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        public static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
         public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [DllImport("gdi32.dll")]
@@ -615,6 +792,22 @@ namespace SoulsConfigurator.Helpers
         [DllImport("gdi32.dll")]
         public static extern uint GetPixel(IntPtr hdc, int nXPos, int nYPos);
 
+        [DllImport("user32.dll")]
+        public static extern bool SetCursorPos(int x, int y);
+
+        [DllImport("user32.dll")]
+        public static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int x;
+            public int y;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
         {
@@ -627,6 +820,12 @@ namespace SoulsConfigurator.Helpers
         public const uint SRCCOPY = 0x00CC0020;
         public const uint WM_CLOSE = 0x0010;
         public const uint BM_CLICK = 0x00F5;
+        
+        // Mouse event constants
+        public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+        public const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        public const uint MOUSEEVENTF_RIGHTUP = 0x0010;
 
         #endregion
 
