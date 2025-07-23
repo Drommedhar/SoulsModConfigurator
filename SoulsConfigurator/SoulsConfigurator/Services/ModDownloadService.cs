@@ -21,6 +21,15 @@ namespace SoulsConfigurator.Services
         // Mod download configurations - Updated to use latest files dynamically
         private static readonly Dictionary<string, ModDownloadInfo> ModDownloads = new()
         {
+            // Dark Souls 1 mods
+            ["DS1_FogGate"] = new ModDownloadInfo
+            {
+                GameDomain = "darksoulsremastered",
+                ModId = 165,
+                FileName = "DS1_FogGate_Randomizer.zip", // Generic name, will use latest file
+                OutputFolder = "DS1"
+            },
+
             // Dark Souls 2 mods
             ["DS2_Randomizer"] = new ModDownloadInfo
             {
@@ -675,10 +684,10 @@ namespace SoulsConfigurator.Services
                 if (modInfo.OutputFolder == gameName)
                 {
                     guide.AppendLine($"{fileCount}. {kvp.Key}:");
-                    guide.AppendLine($"   • URL: https://www.nexusmods.com/{modInfo.GameDomain}/mods/{modInfo.ModId}");
-                    guide.AppendLine($"   • Download the latest MAIN file");
-                    guide.AppendLine($"   • Save as: {modInfo.FileName}");
-                    guide.AppendLine($"   • Location: Data\\{modInfo.OutputFolder}\\");
+                    guide.AppendLine($"   ï¿½ URL: https://www.nexusmods.com/{modInfo.GameDomain}/mods/{modInfo.ModId}");
+                    guide.AppendLine($"   ï¿½ Download the latest MAIN file");
+                    guide.AppendLine($"   ï¿½ Save as: {modInfo.FileName}");
+                    guide.AppendLine($"   ï¿½ Location: Data\\{modInfo.OutputFolder}\\");
                     guide.AppendLine();
                     fileCount++;
                 }
@@ -691,10 +700,10 @@ namespace SoulsConfigurator.Services
                 if (fileInfo.OutputFolder == gameName)
                 {
                     guide.AppendLine($"{fileCount}. {kvp.Key}:");
-                    guide.AppendLine($"   • URL: https://www.nexusmods.com/{fileInfo.GameDomain}/mods/{fileInfo.ModId}");
-                    guide.AppendLine($"   • Download the '{fileInfo.FileNamePattern}' file from OPTIONAL section");
-                    guide.AppendLine($"   • Save as: {fileInfo.FileName}");
-                    guide.AppendLine($"   • Location: Data\\{fileInfo.OutputFolder}\\");
+                    guide.AppendLine($"   ï¿½ URL: https://www.nexusmods.com/{fileInfo.GameDomain}/mods/{fileInfo.ModId}");
+                    guide.AppendLine($"   ï¿½ Download the '{fileInfo.FileNamePattern}' file from OPTIONAL section");
+                    guide.AppendLine($"   ï¿½ Save as: {fileInfo.FileName}");
+                    guide.AppendLine($"   ï¿½ Location: Data\\{fileInfo.OutputFolder}\\");
                     guide.AppendLine();
                     fileCount++;
                 }
@@ -707,9 +716,9 @@ namespace SoulsConfigurator.Services
                 if (downloadInfo.OutputFolder == gameName)
                 {
                     guide.AppendLine($"{fileCount}. {kvp.Key}:");
-                    guide.AppendLine($"   • URL: {downloadInfo.Url}");
-                    guide.AppendLine($"   • Save as: {downloadInfo.FileName}");
-                    guide.AppendLine($"   • Location: Data\\{downloadInfo.OutputFolder}\\");
+                    guide.AppendLine($"   ï¿½ URL: {downloadInfo.Url}");
+                    guide.AppendLine($"   ï¿½ Save as: {downloadInfo.FileName}");
+                    guide.AppendLine($"   ï¿½ Location: Data\\{downloadInfo.OutputFolder}\\");
                     guide.AppendLine();
                     fileCount++;
                 }
@@ -722,20 +731,20 @@ namespace SoulsConfigurator.Services
                 if (mediaFireInfo.OutputFolder == gameName)
                 {
                     guide.AppendLine($"{fileCount}. {kvp.Key}:");
-                    guide.AppendLine($"   • URL: {mediaFireInfo.Url}");
-                    guide.AppendLine($"   • Save as: {mediaFireInfo.FileName}");
-                    guide.AppendLine($"   • Location: Data\\{mediaFireInfo.OutputFolder}\\");
-                    guide.AppendLine($"   • Description: {mediaFireInfo.Description}");
+                    guide.AppendLine($"   ï¿½ URL: {mediaFireInfo.Url}");
+                    guide.AppendLine($"   ï¿½ Save as: {mediaFireInfo.FileName}");
+                    guide.AppendLine($"   ï¿½ Location: Data\\{mediaFireInfo.OutputFolder}\\");
+                    guide.AppendLine($"   ï¿½ Description: {mediaFireInfo.Description}");
                     guide.AppendLine();
                     fileCount++;
                 }
             }
 
             guide.AppendLine("IMPORTANT NOTES:");
-            guide.AppendLine("• Create the Data folder structure if it doesn't exist");
-            guide.AppendLine("• Use the exact filenames shown above");
-            guide.AppendLine("• Download the latest/newest version of each file");
-            guide.AppendLine("• After downloading all files, click 'Check Files' again to verify");
+            guide.AppendLine("ï¿½ Create the Data folder structure if it doesn't exist");
+            guide.AppendLine("ï¿½ Use the exact filenames shown above");
+            guide.AppendLine("ï¿½ Download the latest/newest version of each file");
+            guide.AppendLine("ï¿½ After downloading all files, click 'Check Files' again to verify");
 
             return guide.ToString();
         }
@@ -1131,7 +1140,8 @@ namespace SoulsConfigurator.Services
                     
                     string targetEntryName;
                     
-                    if (allInSingleFolder != null && modKey.Contains("modengine", StringComparison.OrdinalIgnoreCase))
+                    if (allInSingleFolder != null && (modKey.Contains("modengine", StringComparison.OrdinalIgnoreCase))
+                        || modKey.Contains("DS1_FogGate", StringComparison.OrdinalIgnoreCase))
                     {
                         // Remove the common folder prefix
                         targetEntryName = entry.FullName.Substring(allInSingleFolder.Length + 1);

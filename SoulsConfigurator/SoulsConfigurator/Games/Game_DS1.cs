@@ -22,6 +22,7 @@ namespace SoulsConfigurator.Games
         {
             _mods.Add(new DS1Mod_EnemyRandomizer());
             _mods.Add(new DS1Mod_ItemRandomizer());
+            _mods.Add(new DS1Mod_FogGate());
         }
 
         public bool InstallMods(List<IMod> mods)
@@ -80,11 +81,7 @@ namespace SoulsConfigurator.Games
             if (string.IsNullOrEmpty(path))
                 return false;
 
-            // Check if the path ends with the expected folder name
-            if (!path.EndsWith("DARK SOULS REMASTERED", StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            // Check if the executable exists
+            // Check if the DS1 Remastered executable exists
             var executablePath = Path.Combine(path, GetExpectedExecutableName());
             return File.Exists(executablePath);
         }
