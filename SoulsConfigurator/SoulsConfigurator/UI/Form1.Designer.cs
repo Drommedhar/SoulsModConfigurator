@@ -43,6 +43,7 @@ namespace SoulsConfigurator
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             cmbGames = new ComboBox();
             lblGame = new Label();
             lblInstallPath = new Label();
@@ -91,16 +92,16 @@ namespace SoulsConfigurator
             txtInstallPath.Location = new Point(10, 77);
             txtInstallPath.Margin = new Padding(3, 2, 3, 2);
             txtInstallPath.Name = "txtInstallPath";
-            txtInstallPath.Size = new Size(630, 23); // Increased width to match form width
+            txtInstallPath.Size = new Size(630, 23);
             txtInstallPath.TabIndex = 3;
             txtInstallPath.TextChanged += txtInstallPath_TextChanged;
             // 
             // btnBrowse
             // 
-            btnBrowse.Location = new Point(650, 77); // Adjusted position
+            btnBrowse.Location = new Point(650, 77);
             btnBrowse.Margin = new Padding(3, 2, 3, 2);
             btnBrowse.Name = "btnBrowse";
-            btnBrowse.Size = new Size(66, 23); // Increased height to match textbox
+            btnBrowse.Size = new Size(66, 23);
             btnBrowse.TabIndex = 4;
             btnBrowse.Text = "Browse";
             btnBrowse.UseVisualStyleBackColor = true;
@@ -117,7 +118,7 @@ namespace SoulsConfigurator
             // 
             // btnInstallMods
             // 
-            btnInstallMods.Location = new Point(12, 285); // Adjusted Y position for taller mod container
+            btnInstallMods.Location = new Point(12, 285);
             btnInstallMods.Margin = new Padding(3, 2, 3, 2);
             btnInstallMods.Name = "btnInstallMods";
             btnInstallMods.Size = new Size(131, 26);
@@ -128,7 +129,7 @@ namespace SoulsConfigurator
             // 
             // btnClearMods
             // 
-            btnClearMods.Location = new Point(160, 285); // Adjusted Y position
+            btnClearMods.Location = new Point(160, 285);
             btnClearMods.Margin = new Padding(3, 2, 3, 2);
             btnClearMods.Name = "btnClearMods";
             btnClearMods.Size = new Size(131, 26);
@@ -139,7 +140,7 @@ namespace SoulsConfigurator
             // 
             // btnConfigureMod
             // 
-            btnConfigureMod.Location = new Point(308, 285); // Adjusted Y position
+            btnConfigureMod.Location = new Point(308, 285);
             btnConfigureMod.Margin = new Padding(3, 2, 3, 2);
             btnConfigureMod.Name = "btnConfigureMod";
             btnConfigureMod.Size = new Size(131, 26);
@@ -150,7 +151,7 @@ namespace SoulsConfigurator
             // 
             // btnDownloadFiles
             // 
-            btnDownloadFiles.Location = new Point(445, 285); // Next to Check Files button
+            btnDownloadFiles.Location = new Point(445, 285);
             btnDownloadFiles.Margin = new Padding(3, 2, 3, 2);
             btnDownloadFiles.Name = "btnDownloadFiles";
             btnDownloadFiles.Size = new Size(131, 26);
@@ -163,7 +164,7 @@ namespace SoulsConfigurator
             // 
             lblStatus.AutoSize = true;
             lblStatus.ForeColor = Color.Gray;
-            lblStatus.Location = new Point(12, 320); // Adjusted Y position
+            lblStatus.Location = new Point(12, 320);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(0, 15);
             lblStatus.TabIndex = 10;
@@ -172,14 +173,14 @@ namespace SoulsConfigurator
             // 
             panelModsContainer.Location = new Point(12, 130);
             panelModsContainer.Name = "panelModsContainer";
-            panelModsContainer.Size = new Size(705, 150); // Increased width to 705 and height to 150
+            panelModsContainer.Size = new Size(705, 150);
             panelModsContainer.TabIndex = 11;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(730, 350); // Increased width to 730 and height to 350
+            ClientSize = new Size(730, 350);
             Controls.Add(panelModsContainer);
             Controls.Add(lblStatus);
             Controls.Add(btnDownloadFiles);
@@ -192,11 +193,12 @@ namespace SoulsConfigurator
             Controls.Add(lblInstallPath);
             Controls.Add(lblGame);
             Controls.Add(cmbGames);
-            FormBorderStyle = FormBorderStyle.FixedSingle; // Make window non-resizable
-            MaximizeBox = false; // Disable maximize button
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Margin = new Padding(3, 2, 3, 2);
+            MaximizeBox = false;
             Name = "Form1";
-            StartPosition = FormStartPosition.CenterScreen; // Center the window on screen
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Souls Configurator";
             ResumeLayout(false);
             PerformLayout();

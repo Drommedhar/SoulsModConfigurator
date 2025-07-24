@@ -39,7 +39,9 @@ namespace SoulsConfigurator.UI
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
-            
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ModConfigurationForm));
+            Icon = (Icon)resources.GetObject("$this.Icon");
+
             // Status label
             _statusLabel = new Label
             {

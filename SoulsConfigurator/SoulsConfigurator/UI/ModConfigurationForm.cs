@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Resources;
 using System.Text.Json;
 using System.Windows.Forms;
 
@@ -38,6 +39,7 @@ namespace SoulsConfigurator.UI
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             SuspendLayout();
             
             // Form properties - Make the form larger to accommodate more content
@@ -50,6 +52,13 @@ namespace SoulsConfigurator.UI
             MinimizeBox = true;
             StartPosition = FormStartPosition.CenterParent;
             Text = $"{_modConfiguration.ModName} Configuration";
+            
+            // Set the icon if available
+            var iconResource = resources.GetObject("$this.Icon");
+            if (iconResource is Icon icon)
+            {
+                Icon = icon;
+            }
 
             ResumeLayout(false);
         }
