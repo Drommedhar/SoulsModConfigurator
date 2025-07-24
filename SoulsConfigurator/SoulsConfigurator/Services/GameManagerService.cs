@@ -18,6 +18,7 @@ namespace SoulsConfigurator.Services
             _availableGames = new List<IGame>
             {
                 // Only DS3 and Sekiro are fully implemented for now
+                new Game_DS1(),
                 new Game_DS2(),
                 new Game_DS3(),
                 new Game_Sekiro()
@@ -80,7 +81,7 @@ namespace SoulsConfigurator.Services
                 return false;
             }
 
-            _selectedGame.ClearMods(); // Clear existing mods before installing new ones
+            _selectedGame.ClearMods(modsToInstall); // Clear existing mods before installing new ones, passing context
             return _selectedGame.InstallMods(modsToInstall);
         }
 
