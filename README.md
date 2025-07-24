@@ -121,4 +121,4 @@ This project is provided as-is for educational and personal use. Users are respo
 - Special thanks to contributors who help improve and maintain this tool
 - A very special thanks to [Divi](https://www.twitch.tv/divi) and her community for the idea and testing
 
-- Also for DS1 I"m using my forks of [Dark-Souls-Enemy-Randomizer]([https://www.twitch.tv/divi](https://github.com/Drommedhar/Dark-Souls-Enemy-Randomizer) and [DarkSoulsItemRandomizer)]([https://github.com/Drommedhar/DarkSoulsItemRandomizer] which are adjusted to allow CLI arguments and use INI files for configuration.
+- Also for DS1 I"m using my forks of [Dark-Souls-Enemy-Randomizer](https://github.com/Drommedhar/Dark-Souls-Enemy-Randomizer) and [DarkSoulsItemRandomizer](https://github.com/Drommedhar/DarkSoulsItemRandomizer) which are adjusted to allow CLI arguments and use INI files for configuration.
