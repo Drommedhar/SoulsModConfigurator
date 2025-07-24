@@ -3,6 +3,7 @@ using SoulsConfigurator.Mods.DS1;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace SoulsConfigurator.Games
 {
@@ -47,6 +48,11 @@ namespace SoulsConfigurator.Games
 
         public bool ClearMods()
         {
+            return ClearMods(null);
+        }
+
+        public bool ClearMods(List<IMod>? modsToInstallNext)
+        {
             if (string.IsNullOrEmpty(_installPath))
             {
                 return false;
@@ -54,7 +60,14 @@ namespace SoulsConfigurator.Games
 
             foreach (var mod in _mods)
             {
-                if (!mod.TryRemoveMod(_installPath))
+                // Check if this is the enemy randomizer and if it will be reinstalled
+                bool willReinstall = false;
+                if (mod is DS1Mod_EnemyRandomizer && modsToInstallNext != null)
+                {
+                    willReinstall = modsToInstallNext.Any(m => m is DS1Mod_EnemyRandomizer);
+                }
+
+                if (!mod.TryRemoveMod(_installPath, willReinstall))
                 {
                     return false;
                 }

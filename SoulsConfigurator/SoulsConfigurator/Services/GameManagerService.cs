@@ -81,7 +81,7 @@ namespace SoulsConfigurator.Services
                 return false;
             }
 
-            _selectedGame.ClearMods(); // Clear existing mods before installing new ones
+            _selectedGame.ClearMods(modsToInstall); // Clear existing mods before installing new ones, passing context
             return _selectedGame.InstallMods(modsToInstall);
         }
 

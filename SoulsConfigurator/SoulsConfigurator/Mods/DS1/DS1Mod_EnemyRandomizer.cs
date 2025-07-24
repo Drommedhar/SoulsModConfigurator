@@ -138,6 +138,11 @@ namespace SoulsConfigurator.Mods.DS1
 
         public bool TryRemoveMod(string destPath)
         {
+            return TryRemoveMod(destPath, false);
+        }
+
+        public bool TryRemoveMod(string destPath, bool willReinstall)
+        {
             try
             {
                 // First, revert the game data to vanilla
@@ -150,7 +155,7 @@ namespace SoulsConfigurator.Mods.DS1
                         {
                             FileName = randomizerPath,
                             WorkingDirectory = destPath,
-                            Arguments = "--revert",
+                            Arguments = willReinstall ? "--revert --no-revert-effects" : "--revert",
                             UseShellExecute = true,
                             CreateNoWindow = false
                         };
