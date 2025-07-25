@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
+
         <Grid HorizontalAlignment="Stretch" Grid.Row="0" Width="Auto" Margin="5,5,5,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -31,10 +31,8 @@
                     HorizontalAlignment="Right"
                     Grid.Column="1"/>
         </Grid>
-        <Separator Grid.Row="1" Margin="5" Background="#FF222225"/>
         <controls:ModListCtrl Grid.Row="2"/>
 
-        <Separator Grid.Row="3" Margin="5" Background="#FF222225"/>
         <ui:SimpleStackPanel Orientation="Horizontal" Spacing="5" Grid.Row="4" VerticalAlignment="Bottom" Margin="5,0,5,5">
             <Button Content="Install selected Mods" 
                     Margin="5"
