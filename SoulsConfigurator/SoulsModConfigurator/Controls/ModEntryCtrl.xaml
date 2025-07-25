@@ -20,6 +20,6 @@
             <ComboBox x:Name="Preset" VerticalAlignment="Center" MinWidth="150"/>
             <Button x:Name="btnConfigure" Content="Configure" />
         </StackPanel>
-        
+
     </Grid>
 </UserControl>

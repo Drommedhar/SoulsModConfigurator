@@ -1,0 +1,104 @@
+<Window x:Class="SoulsModConfigurator.Windows.ModConfigurationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        Title="{Binding WindowTitle}"
+        Height="700" Width="1100"
+        MinHeight="550" MinWidth="900"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Icon="../Properties/SoulsModConfigurator.ico">
+
+    <Window.Resources>
+        <Style x:Key="GroupBoxStyle" TargetType="GroupBox">
+            <Setter Property="Margin" Value="1"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="BorderBrush" Value="#222225"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#1a1a1e"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupBox">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <ContentPresenter Grid.Row="0"
+                                                      ContentSource="Header"
+                                                      Margin="8,4,8,8"
+                                                      HorizontalAlignment="Left"
+                                                      VerticalAlignment="Center"/>
+                                    
+                                    <ContentPresenter Grid.Row="1"
+                                                      Margin="{TemplateBinding Padding}"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ControlLabelStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+        </Style>
+
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Main Content Area -->
+        <TabControl x:Name="MainTabControl" Grid.Row="0" Margin="15,15,15,10">
+            <!-- Tabs will be generated dynamically -->
+        </TabControl>
+        
+        <!-- Single content area for when there's only one tab -->
+        <ScrollViewer x:Name="SingleContentScrollViewer" Grid.Row="0" Margin="15,15,15,10" 
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                      Visibility="Collapsed">
+            <StackPanel x:Name="SingleContentPanel"/>
+        </ScrollViewer>
+        
+        <!-- Bottom Controls -->
+        <Grid Grid.Row="1" Margin="15,10,15,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Preset Controls -->
+            <TextBlock Grid.Column="0" Text="User Presets:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+            <ComboBox x:Name="PresetComboBox" Grid.Column="1" Margin="0,0,10,0"
+                      SelectionChanged="PresetComboBox_SelectionChanged"/>
+            <Button x:Name="DeletePresetButton" Grid.Column="3" Content="Delete"
+                    Click="DeletePresetButton_Click"/>
+
+            <!-- Action Buttons -->
+            <Button x:Name="CancelButton" Grid.Column="5" Content="Cancel"
+                    IsCancel="True" Click="CancelButton_Click"/>
+            <Button x:Name="SavePresetButton" Grid.Column="6" Content="Save As..."
+                    Click="SavePresetButton_Click" Margin="5,0,0,0"/>
+        </Grid>
+    </Grid>
+</Window>

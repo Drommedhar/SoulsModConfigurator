@@ -46,6 +46,9 @@ namespace SoulsModConfigurator
             // Subscribe to preset change events
             _presetService.PresetChanged += OnPresetChanged;
             
+            // Subscribe to notification service events
+            NotificationService.Instance.NotificationRequested += OnNotificationRequested;
+            
             InitializeForm();
             
             // Ensure data is loaded after the window is fully loaded
@@ -83,6 +86,23 @@ namespace SoulsModConfigurator
                 System.Diagnostics.Debug.WriteLine($"Error in OnPresetChanged: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
+        }
+
+        /// <summary>
+        /// Handles notification requests from the NotificationService
+        /// </summary>
+        private void OnNotificationRequested(object? sender, NotificationMessage notification)
+        {
+            // Ensure we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => OnNotificationRequested(sender, notification));
+                return;
+            }
+
+            // TODO: We actually want to show an overlay in the main window with that information
+            //       Maybe we can reuse the existing OverlayPanel for this?
+
         }
 
         private void InitializeForm()
@@ -129,6 +149,9 @@ namespace SoulsModConfigurator
             
             // Check for updates asynchronously
             _ = CheckForUpdatesAsync();
+            
+            // Check for outdated presets asynchronously
+            _ = CheckForOutdatedPresetsAsync();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -237,6 +260,25 @@ namespace SoulsModConfigurator
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error checking for updates: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Checks for outdated presets and shows notifications if any are found
+        /// </summary>
+        private async Task CheckForOutdatedPresetsAsync()
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    // Check for outdated presets
+                    _presetService.CheckForOutdatedPresets();
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error checking for outdated presets: {ex.Message}");
             }
         }
 

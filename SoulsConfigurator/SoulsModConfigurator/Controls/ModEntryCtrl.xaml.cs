@@ -13,7 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SoulsConfigurator.Interfaces;
-using SoulsConfigurator.UI;
+using SoulsConfigurator.Services;
+using SoulsModConfigurator.Windows;
+using SoulsModConfigurator.Extensions;
 
 namespace SoulsModConfigurator.Controls
 {
@@ -134,16 +136,21 @@ namespace SoulsModConfigurator.Controls
         {
             try
             {
-                var modConfiguration = configurableMod.GetUIConfiguration();
-                var configForm = new ModConfigurationForm(modConfiguration);
-                configForm.ShowDialog();
+                // Find the main window to use as parent
+                var mainWindow = Application.Current.MainWindow;
                 
-                // Refresh presets after configuration
-                SetupConfigurableMod(configurableMod);
+                // Use the extension method to show the configuration window
+                var configuration = configurableMod.ShowConfigurationWindow(mainWindow);
+                
+                if (configuration != null)
+                {
+                    // Configuration was saved, refresh presets
+                    SetupConfigurableMod(configurableMod);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error opening mod configuration: {ex.Message}", "Error", 
+                MessageBox.Show($"Error opening mod configuration: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

@@ -81,7 +81,7 @@ namespace SoulsModConfigurator.Controls
 
             ForceRender(this);
 
-            Debug.WriteLine("Parent layout updated, forcing render of BackgroundPresenter.");
+            //Debug.WriteLine("Parent layout updated, forcing render of BackgroundPresenter.");
         }
 
         private static void DrawBackground(
