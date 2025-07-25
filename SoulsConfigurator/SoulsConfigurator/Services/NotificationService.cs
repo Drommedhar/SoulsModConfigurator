@@ -83,7 +83,7 @@ namespace SoulsConfigurator.Services
                 Type = NotificationType.Warning,
                 Links = new Dictionary<string, string>
                 {
-                    { "Learn more about preset updates", "https://github.com/Drommedhar/SoulsModConfigurator/wiki/Preset-Updates" }
+                    
                 },
                 IsClosable = true
             });

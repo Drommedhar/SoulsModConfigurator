@@ -100,12 +100,11 @@ namespace SoulsModConfigurator
                 return;
             }
 
-            // TODO: We actually want to show an overlay in the main window with that information
-            //       Maybe we can reuse the existing OverlayPanel for this?
-
+            // Show the notification using the OverlayPanel
+            _overlayPanel?.ShowNotification(notification);
         }
 
-        private void InitializeForm()
+        private async void InitializeForm()
         {
             // Set up game-tab mapping
             var games = _gameManager.GetAvailableGames();
@@ -148,7 +147,7 @@ namespace SoulsModConfigurator
             }
             
             // Check for updates asynchronously
-            _ = CheckForUpdatesAsync();
+            await CheckForUpdatesAsync();
             
             // Check for outdated presets asynchronously
             _ = CheckForOutdatedPresetsAsync();
@@ -254,8 +253,23 @@ namespace SoulsModConfigurator
         {
             try
             {
-                // This would be implemented when version checking is needed
-                await Task.Delay(1); // Placeholder
+                var result = await _versionCheckService.CheckForUpdatesAsync();
+                if (result.IsUpdateAvailable)
+                {
+                    var content = $"There is a new version available.";
+
+                    NotificationService.Instance.ShowNotification(new NotificationMessage
+                    {
+                        Title = "Update available",
+                        Content = content,
+                        Type = NotificationType.Warning,
+                        Links = new Dictionary<string, string>
+                        {
+                            { "Click here to get it here.", "https://github.com/Drommedhar/SoulsModConfigurator/releases/latest" }
+                        },
+                        IsClosable = true
+                    });
+                }
             }
             catch (Exception ex)
             {
