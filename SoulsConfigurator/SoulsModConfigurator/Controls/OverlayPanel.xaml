@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="SoulsModConfigurator.Controls.OverlayPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:controls="clr-namespace:SoulsModConfigurator.Controls"
+             xmlns:gif="http://wpfanimatedgif.codeplex.com"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid x:Name="pnlOverlay">
+        <Canvas x:Name="canvas" Background="{x:Null}">
+            <controls:BackgroundPresenter Canvas.Left="0"
+                                   Canvas.Top="0"
+                                   Width="{Binding ActualWidth, ElementName=pnlOverlay, Mode=OneWay}"
+                                   Height="{Binding ActualHeight, ElementName=pnlOverlay, Mode=OneWay}">
+                <controls:BackgroundPresenter.Effect>
+                    <BlurEffect Radius="10"/>
+                </controls:BackgroundPresenter.Effect>
+            </controls:BackgroundPresenter>
+        </Canvas>
+        <Rectangle Fill="#7F121214" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Image gif:ImageBehavior.AnimatedSource="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1fde6ec4ffe4f2396227883d34f1ca9/default/dark/1.0" Width="32" Height="32" />
+                <Image gif:ImageBehavior.AnimatedSource="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_82659a2fbc144975b12d872877bee98b/default/dark/1.0" Width="32" Height="32" />
+                <Label Content="Breathing life into your mods..." FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <Label Content="Status: Something really important will be displayed here. Yes yes!" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        </Grid>
+</UserControl>

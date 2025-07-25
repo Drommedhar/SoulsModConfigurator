@@ -51,29 +51,6 @@
 
         </TabControl>
 
-        <Grid x:Name="pnlOverlay" Visibility="Hidden">
-            <Canvas x:Name="canvas" Background="{x:Null}">
-                <controls:BackgroundPresenter Canvas.Left="0"
-                                           Canvas.Top="0"
-                                           Width="{Binding ActualWidth, ElementName=pnlOverlay, Mode=OneWay}"
-                                           Height="{Binding ActualHeight, ElementName=pnlOverlay, Mode=OneWay}">
-                    <controls:BackgroundPresenter.Effect>
-                        <BlurEffect Radius="10"/>
-                    </controls:BackgroundPresenter.Effect>
-                </controls:BackgroundPresenter>
-            </Canvas>
-            <Rectangle Fill="#7F121214" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Image gif:ImageBehavior.AnimatedSource="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1fde6ec4ffe4f2396227883d34f1ca9/default/dark/1.0" Width="32" Height="32" />
-                    <Image gif:ImageBehavior.AnimatedSource="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_82659a2fbc144975b12d872877bee98b/default/dark/1.0" Width="32" Height="32" />
-                    <Label Content="Breathing life into your mods..." FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
-                </StackPanel>
-
-                <Label Content="Status: Something really important will be displayed here. Yes yes!" HorizontalAlignment="Center"/>
-            </StackPanel>
-
-        </Grid>
+        <controls:OverlayPanel x:Name="pnlInfo" Visibility="Hidden"/>
     </Grid>
 </Window>
