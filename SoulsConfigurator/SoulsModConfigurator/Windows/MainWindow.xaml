@@ -11,7 +11,7 @@
         Title="SoulsModConfigurator" Height="450" Width="800"
         ui:WindowHelper.UseModernWindowStyle="True">
     <Grid>
-        <TabControl>
+        <TabControl x:Name="tabControlGames" SelectionChanged="TabControlGames_SelectionChanged">
             <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -19,34 +19,34 @@
                         <Label Content="Dark Souls 1" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
-                <controls:GameViewCtrl VerticalAlignment="Stretch" />
+                <controls:GameViewCtrl x:Name="GameViewDS1" VerticalAlignment="Stretch" />
             </TabItem>
-            <TabItem>
+            <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Image Source="/Properties/ds2.png" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <Label Content="Dark Souls 2" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
-                <Label Content="Content goes here..." />
+                <controls:GameViewCtrl x:Name="GameViewDS2" VerticalAlignment="Stretch" />
             </TabItem>
-            <TabItem>
+            <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Image Source="/Properties/ds3.png" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <Label Content="Dark Souls 3" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
-                <Label Content="Content goes here..." />
+                <controls:GameViewCtrl x:Name="GameViewDS3" VerticalAlignment="Stretch" />
             </TabItem>
-            <TabItem>
+            <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Image Source="/Properties/sekiro.png" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <Label Content="Sekiro" VerticalAlignment="Center" Margin="10,0,0,0" />
                     </StackPanel>
                 </TabItem.Header>
-                <Label Content="Content goes here..." />
+                <controls:GameViewCtrl x:Name="GameViewSekiro" VerticalAlignment="Stretch" />
             </TabItem>
 
         </TabControl>

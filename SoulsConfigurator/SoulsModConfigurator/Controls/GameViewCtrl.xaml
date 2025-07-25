@@ -23,22 +23,29 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="D:\git\SoulsModConfigurator\SoulsConfigurator\SoulsConfigurator\bin\Debug\net8.0-windows" 
-           VerticalAlignment="Center" HorizontalAlignment="Stretch" IsReadOnly="True" Grid.Column="0"/>
+            <TextBox x:Name="txtGamePath"
+                     Text="Game path not set" 
+                     VerticalAlignment="Center" 
+                     HorizontalAlignment="Stretch" 
+                     IsReadOnly="True" 
+                     Grid.Column="0"/>
             <Button Content="Browse..." 
                     Margin="5" 
                     VerticalAlignment="Center" 
                     HorizontalAlignment="Right"
+                    Click="OnBrowseClick"
                     Grid.Column="1"/>
         </Grid>
-        <controls:ModListCtrl Grid.Row="2"/>
+        <controls:ModListCtrl x:Name="modListCtrl" Grid.Row="2"/>
 
         <ui:SimpleStackPanel Orientation="Horizontal" Spacing="5" Grid.Row="4" VerticalAlignment="Bottom" Margin="5,0,5,5">
             <Button Content="Install selected Mods" 
                     Margin="5"
+                    Click="OnInstallModsClick"
                     IsEnabled="{Binding IsDirty, Mode=OneWay}"/>
             <Button Content="Remove all Mods" 
                     Margin="5"
+                    Click="OnRemoveAllModsClick"
                     IsEnabled="{Binding IsDirty, Mode=OneWay}"/>
         </ui:SimpleStackPanel>
     </Grid>

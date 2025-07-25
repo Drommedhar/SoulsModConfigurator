@@ -9,12 +9,12 @@
              Margin="1"
              d:DesignHeight="65" d:DesignWidth="600" Background="#FF222327">
     <Grid>
-        <CheckBox x:Name="CheckBoxEnabled" 
-                    Margin="5" 
-                    VerticalAlignment="Center" 
-                    HorizontalAlignment="Stretch" 
-                    Content="This is a mod name which is long" 
-                    IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+        <CheckBox x:Name="CheckBoxEnabled"
+                    Margin="5"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch"
+                    Content="This is a mod name which is long"
+                    IsChecked="False" />
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5">
             <Label Content="Preset:" VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
             <ComboBox x:Name="Preset" VerticalAlignment="Center" MinWidth="150"/>

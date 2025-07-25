@@ -28,6 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SoulsConfigurator\SoulsConfigurator.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Properties\ds1r.png" />
     <Resource Include="Properties\ds2.png" />
     <Resource Include="Properties\ds3.png" />

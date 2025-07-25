@@ -27,7 +27,7 @@
                 <Label Content="Breathing life into your mods..." FontSize="24" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" HorizontalAlignment="Left"/>
             </StackPanel>
 
-            <Label Content="Status: Something really important will be displayed here. Yes yes!" HorizontalAlignment="Center"/>
+            <Label x:Name="lblStatus" Content="Status: Something really important will be displayed here. Yes yes!" HorizontalAlignment="Center"/>
         </StackPanel>
 
         </Grid>

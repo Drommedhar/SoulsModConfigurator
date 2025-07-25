@@ -11,16 +11,8 @@
             VerticalAlignment="Stretch" 
             Height="Auto"
            Width="Auto" BorderBrush="#FF222225" BorderThickness="1" Margin="5">
-        <StackPanel Orientation="Vertical">
-            <controls:ModEntryCtrl x:Name="ModEntry1" 
-                    DockPanel.Dock="Top"
-                      IsEnabled="{Binding IsEnabled, Mode=TwoWay}" />
-            <controls:ModEntryCtrl x:Name="ModEntry2" 
-                    DockPanel.Dock="Top"
-                      IsEnabled="{Binding IsEnabled, Mode=TwoWay}" />
-                                <controls:ModEntryCtrl x:Name="ModEntry3" 
-                    DockPanel.Dock="Top"
-                      IsEnabled="{Binding IsEnabled, Mode=TwoWay}" />
+        <StackPanel x:Name="stackPanelMods" Orientation="Vertical">
+            <!-- Mod entries will be added dynamically -->
         </StackPanel>
     </ScrollViewer>
 </UserControl>
