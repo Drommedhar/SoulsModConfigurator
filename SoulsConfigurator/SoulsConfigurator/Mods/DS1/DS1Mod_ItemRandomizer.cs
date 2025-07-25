@@ -115,8 +115,8 @@ namespace SoulsConfigurator.Mods.DS1
                             FileName = randomizerPath,
                             WorkingDirectory = destPath,
                             Arguments = "--revert",
-                            UseShellExecute = true,
-                            CreateNoWindow = false
+                            UseShellExecute = false,
+                            CreateNoWindow = true
                         };
 
                         using (var process = Process.Start(processInfo))

@@ -50,18 +50,20 @@ namespace SoulsModConfigurator.Controls
             
             // Set up the UI based on the mod
             CheckBoxEnabled.Content = mod.Name;
-            CheckBoxEnabled.IsEnabled = mod.IsAvailable();
             CheckBoxEnabled.IsChecked = false; // Default to unchecked
             
-            // Set background color based on availability
+            // Set background color and interaction based on availability
             if (!mod.IsAvailable())
             {
-                Background = new SolidColorBrush(Colors.MistyRose);
+                // Normal background color but with a slight red tint
+                Background = new SolidColorBrush(Color.FromRgb(55, 35, 39)); // Slightly red-tinted version of normal color
                 CheckBoxEnabled.Content += " ⚠ Missing Files";
+                CheckBoxEnabled.IsEnabled = false; // Disable interaction
             }
             else
             {
                 Background = new SolidColorBrush(Color.FromRgb(34, 35, 39)); // Match the design color
+                CheckBoxEnabled.IsEnabled = true; // Enable interaction
             }
 
             // Handle configurable mods
@@ -74,11 +76,7 @@ namespace SoulsModConfigurator.Controls
                 // Hide preset controls for non-configurable mods
                 Preset.Visibility = Visibility.Collapsed;
                 btnConfigure.Visibility = Visibility.Collapsed;
-                var presetLabel = FindChild<Label>(this);
-                if (presetLabel != null)
-                {
-                    presetLabel.Visibility = Visibility.Collapsed;
-                }
+                lblPreset.Visibility = Visibility.Hidden;
             }
         }
 

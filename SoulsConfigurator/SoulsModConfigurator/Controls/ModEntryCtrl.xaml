@@ -16,7 +16,7 @@
                     Content="This is a mod name which is long"
                     IsChecked="False" />
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5">
-            <Label Content="Preset:" VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
+            <Label x:Name="lblPreset" Content="Preset:" VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
             <ComboBox x:Name="Preset" VerticalAlignment="Center" MinWidth="150"/>
             <Button x:Name="btnConfigure" Content="Configure" />
         </StackPanel>
