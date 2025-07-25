@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Properties\SoulsModConfigurator.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Properties\ds1r.png" />
+    <None Remove="Properties\ds2.png" />
+    <None Remove="Properties\ds3.png" />
+    <None Remove="Properties\sekiro.png" />
+    <None Remove="Properties\SoulsModConfigurator.png" />
+    <None Remove="SoulsModConfigurator.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Properties\SoulsModConfigurator.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModernWpfUI" Version="0.9.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Properties\ds1r.png" />
+    <Resource Include="Properties\ds2.png" />
+    <Resource Include="Properties\ds3.png" />
+    <Resource Include="Properties\sekiro.png" />
+    <Resource Include="Properties\SoulsModConfigurator.png" />
+    <Resource Include="SoulsModConfigurator.png" />
+  </ItemGroup>
+
+</Project>
