@@ -660,6 +660,56 @@ namespace SoulsConfigurator.Mods.DS3
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS3 Item & Enemy Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS3", ModFile), destPath);
+                
+                // Copy Carthus Worm Banned preset if enabled
+                if (_savedConfiguration != null &&
+                    _savedConfiguration.TryGetValue("carthus_worm_banned", out object? presetValue) &&
+                    Convert.ToBoolean(((JsonElement)presetValue).ValueKind.ToString()))
+                {
+                    statusUpdater?.Invoke("Copying Carthus Worm Banned preset...");
+                    CopyCarthusWormPreset(destPath);
+                }
+                
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running DS3 Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    ModAutomationHelper.ModifyModEngineIni(destPath, "randomizer");
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("DS3 Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("DS3 Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("DS3 Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try

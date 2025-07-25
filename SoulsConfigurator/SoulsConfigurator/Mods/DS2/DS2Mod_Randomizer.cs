@@ -2497,6 +2497,46 @@ namespace SoulsConfigurator.Mods.DS2
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS2 Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS2", ModFile), destPath, true);
+
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running DS2 Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("DS2 Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("DS2 Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("DS2 Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try

@@ -96,10 +96,10 @@ namespace SoulsConfigurator.Mods.DS1
                     FileName = Path.Combine(workingDir, "enemy_randomizer.exe"),
                     Arguments = $"--randomize --config \"{iniPath}\"",
                     WorkingDirectory = workingDir,
-                    UseShellExecute = true,
-                    RedirectStandardOutput = false,
-                    RedirectStandardError = false,
-                    CreateNoWindow = false
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
                 };
 
                 using (var process = System.Diagnostics.Process.Start(processInfo))
@@ -107,30 +107,148 @@ namespace SoulsConfigurator.Mods.DS1
                     if (process == null)
                         return false;
 
-                    // Read output for debugging
-                    //string output = process.StandardOutput.ReadToEnd();
-                    //string error = process.StandardError.ReadToEnd();
+                    // Read output for better user feedback
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
 
                     process.WaitForExit();
 
                     // Consider it successful if the process exits with code 0
                     bool success = process.ExitCode == 0;
 
-                    // Log output for debugging (optional)
-                    //if (!string.IsNullOrEmpty(output))
-                    //{
-                    //    System.Diagnostics.Debug.WriteLine($"Enemy Randomizer Output: {output}");
-                    //}
-                    //if (!string.IsNullOrEmpty(error))
-                    //{
-                    //    System.Diagnostics.Debug.WriteLine($"Enemy Randomizer Error: {error}");
-                    //}
+                    // Log output for debugging
+                    if (!string.IsNullOrEmpty(output))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Enemy Randomizer Output: {output}");
+                    }
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Enemy Randomizer Error: {error}");
+                    }
 
                     return success;
                 }
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Error executing enemy randomizer: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Preparing Enemy Randomizer installation...");
+                
+                // Copy the randomizer executable
+                statusUpdater?.Invoke("Copying enemy randomizer executable...");
+                File.Copy(
+                    Path.Combine("Data", "DS1", "enemy_randomizer.exe"),
+                    Path.Combine(destPath, "enemy_randomizer.exe"),
+                    true);
+
+                // Copy the entire enemyRandomizerData folder
+                statusUpdater?.Invoke("Copying enemy randomizer data files...");
+                string sourceDataFolder = Path.Combine("Data", "DS1", "enemyRandomizerData");
+                string destDataFolder = Path.Combine(destPath, "enemyRandomizerData");
+                
+                if (Directory.Exists(sourceDataFolder))
+                {
+                    CopyDirectory(sourceDataFolder, destDataFolder, true);
+                }
+
+                // Handle the valid_new.txt file specifically for enemy enable/disable
+                statusUpdater?.Invoke("Applying enemy configuration...");
+                string sourceValidNew = Path.Combine("Data", "DS1", "valid_new.txt");
+                string destValidNew = Path.Combine(destPath, "enemyRandomizerData", "customConfigs", "valid_new.txt");
+                
+                if (File.Exists(sourceValidNew))
+                {
+                    // Ensure the replacement_ref directory exists
+                    Directory.CreateDirectory(Path.GetDirectoryName(destValidNew)!);
+                    
+                    if (_savedConfiguration != null)
+                    {
+                        // Apply user configuration to valid_new.txt
+                        ApplyEnemyConfiguration(sourceValidNew, destValidNew);
+                    }
+                    else
+                    {
+                        // Just copy the default file
+                        File.Copy(sourceValidNew, destValidNew, true);
+                    }
+                }
+
+                // Generate and copy the INI file for other randomizer settings
+                statusUpdater?.Invoke("Generating configuration file...");
+                string destIniPath = Path.Combine(destPath, "enemy_randomizer.ini");
+                GenerateIniFile(destIniPath);
+
+                // Execute the enemy randomizer to apply the randomization
+                statusUpdater?.Invoke("Running enemy randomizer...");
+                bool result = await ExecuteEnemyRandomizerAsync(destPath, destIniPath, statusUpdater);
+                
+                if (result)
+                {
+                    statusUpdater?.Invoke("Enemy Randomizer installed successfully!");
+                }
+                else
+                {
+                    statusUpdater?.Invoke("Enemy Randomizer installation failed.");
+                }
+                
+                return result;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<bool> ExecuteEnemyRandomizerAsync(string workingDir, string iniPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Starting enemy randomizer process...");
+                
+                var processInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = Path.Combine(workingDir, "enemy_randomizer.exe"),
+                    Arguments = $"--randomize --config \"{iniPath}\"",
+                    WorkingDirectory = workingDir,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    CreateNoWindow = true
+                };
+
+                using (var process = System.Diagnostics.Process.Start(processInfo))
+                {
+                    if (process == null)
+                    {
+                        statusUpdater?.Invoke("Failed to start enemy randomizer process");
+                        return false;
+                    }
+
+                    // Wait for the process to complete without overwhelming UI updates
+                    statusUpdater?.Invoke("Processing enemy randomization - please wait...");
+                    await process.WaitForExitAsync();
+
+                    // Consider it successful if the process exits with code 0
+                    bool success = process.ExitCode == 0;
+
+                    return success;
+                }
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error executing enemy randomizer: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Error executing enemy randomizer: {ex.Message}");
                 return false;
             }

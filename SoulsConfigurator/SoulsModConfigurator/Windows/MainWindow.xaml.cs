@@ -28,6 +28,7 @@ namespace SoulsModConfigurator
         private readonly ModDownloadService _downloadService;
         private readonly VersionCheckService _versionCheckService;
         private readonly Dictionary<string, IGame> _gameTabMapping;
+        private OverlayPanel? _overlayPanel;
 
         public MainWindow()
         {
@@ -38,6 +39,9 @@ namespace SoulsModConfigurator
             _downloadService = new ModDownloadService();
             _versionCheckService = new VersionCheckService();
             _gameTabMapping = new Dictionary<string, IGame>();
+            
+            // Get reference to overlay panel
+            _overlayPanel = FindName("pnlInfo") as OverlayPanel;
             
             // Subscribe to preset change events
             _presetService.PresetChanged += OnPresetChanged;
@@ -234,6 +238,50 @@ namespace SoulsModConfigurator
             {
                 System.Diagnostics.Debug.WriteLine($"Error checking for updates: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Shows the overlay panel with the specified status message
+        /// </summary>
+        /// <param name="statusMessage">The status message to display</param>
+        public void ShowOverlay(string statusMessage = "Processing mod installation...")
+        {
+            _overlayPanel?.ShowOverlay(statusMessage);
+        }
+
+        /// <summary>
+        /// Hides the overlay panel
+        /// </summary>
+        public void HideOverlay()
+        {
+            _overlayPanel?.HideOverlay();
+        }
+
+        /// <summary>
+        /// Updates the status message in the overlay
+        /// </summary>
+        /// <param name="statusMessage">The new status message</param>
+        public void UpdateOverlayStatus(string statusMessage)
+        {
+            _overlayPanel?.UpdateStatus(statusMessage);
+        }
+
+        /// <summary>
+        /// Shows the overlay for UI-based executables
+        /// </summary>
+        /// <param name="modName">The name of the mod being processed</param>
+        public void ShowOverlayForUIExecutable(string modName)
+        {
+            _overlayPanel?.ShowForUIExecutable(modName);
+        }
+
+        /// <summary>
+        /// Shows the overlay for command line executables
+        /// </summary>
+        /// <param name="modName">The name of the mod being processed</param>
+        public void ShowOverlayForCommandLineExecutable(string modName)
+        {
+            _overlayPanel?.ShowForCommandLineExecutable(modName);
         }
     }
 }

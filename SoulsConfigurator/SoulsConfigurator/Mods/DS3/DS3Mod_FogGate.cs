@@ -231,6 +231,47 @@ namespace SoulsConfigurator.Mods.DS3
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS3 Fog Gate Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS3", ModFile), destPath);
+                
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running DS3 Fog Gate Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    ModAutomationHelper.ModifyModEngineIni(destPath, "fog");
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("DS3 Fog Gate Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("DS3 Fog Gate Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("DS3 Fog Gate Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try

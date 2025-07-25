@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,12 @@ using System.Windows.Shapes;
 using SoulsConfigurator.Services;
 using SoulsConfigurator.Interfaces;
 using Microsoft.Win32;
+using SoulsModConfigurator;
+using SoulsModConfigurator.Helpers;
+using SoulsConfigurator.Mods.DS1;
+using SoulsConfigurator.Mods.DS2;
+using SoulsConfigurator.Mods.DS3;
+using SoulsConfigurator.Mods.Sekiro;
 
 namespace SoulsModConfigurator.Controls
 {
@@ -160,50 +167,385 @@ namespace SoulsModConfigurator.Controls
             }
         }
 
-        private void OnInstallModsClick(object sender, RoutedEventArgs e)
+        private async void OnInstallModsClick(object sender, RoutedEventArgs e)
         {
             if (_game == null || _gameManager == null) return;
 
             var selectedMods = GetSelectedMods();
             if (selectedMods.Any())
             {
-                var result = _gameManager.InstallSelectedMods(selectedMods);
-                if (result)
+                // Get reference to main window
+                var mainWindow = Application.Current.MainWindow as MainWindow;
+                
+                try
                 {
-                    MessageBox.Show("Mods installed successfully!", "Success", 
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    IsDirty = false;
+                    // Show overlay
+                    mainWindow?.ShowOverlay("Preparing mod installation...");
+                    
+                    // Disable the button to prevent multiple clicks
+                    if (sender is Button button)
+                    {
+                        button.IsEnabled = false;
+                    }
+
+                    var result = await InstallModsAsync(selectedMods, mainWindow);
+                    
+                    // Hide overlay
+                    mainWindow?.HideOverlay();
+                    
+                    if (result)
+                    {
+                        MessageBox.Show("Mods installed successfully!", "Success",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        IsDirty = false;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Failed to install mods. Please check the game path and mod files.",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Failed to install mods. Please check the game path and mod files.", 
+                    mainWindow?.HideOverlay();
+                    MessageBox.Show($"Error during mod installation: {ex.Message}",
                         "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    // Re-enable the button
+                    if (sender is Button button)
+                    {
+                        button.IsEnabled = true;
+                    }
                 }
             }
         }
 
-        private void OnRemoveAllModsClick(object sender, RoutedEventArgs e)
+        private async Task<bool> InstallModsAsync(List<IMod> selectedMods, MainWindow? mainWindow)
+        {
+            if (_game == null || _gameManager == null) return false;
+
+            return await _gameManager.InstallSelectedModsAsync(selectedMods, message =>
+            {
+                mainWindow?.UpdateOverlayStatus(message);
+            });
+        }
+
+
+        private async Task<bool> InstallModWithOutputCaptureAsync(IMod mod, MainWindow? mainWindow)
+        {
+            if (_game == null) return false;
+
+            try
+            {
+                // Check if this mod has an async installation method with status reporting
+                if (mod is DS1Mod_EnemyRandomizer enemyRandomizer)
+                {
+                    // Use the async method with status updates for console output
+                    return await enemyRandomizer.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS1Mod_ItemRandomizer itemRandomizer)
+                {
+                    // Use the async method with status updates for console output
+                    return await itemRandomizer.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS2Mod_Randomizer ds2Randomizer)
+                {
+                    // Use the async method with status updates for UI-based installation
+                    return await ds2Randomizer.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS1Mod_FogGate fogGate)
+                {
+                    // Use the async method with status updates for UI-based installation
+                    return await fogGate.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS3Mod_Item_Enemy ds3ItemEnemy)
+                {
+                    // Use the async method with status updates for UI-based installation
+                    return await ds3ItemEnemy.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS3Mod_Crashfix ds3Crashfix)
+                {
+                    // Use the async method with status updates for simple file copy
+                    return await ds3Crashfix.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS3Mod_FogGate ds3FogGate)
+                {
+                    // Use the async method with status updates for UI-based installation
+                    return await ds3FogGate.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is DS3Mod_ModEngine ds3ModEngine)
+                {
+                    // Use the async method with status updates for simple file extraction
+                    return await ds3ModEngine.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is SekiroMod_ModEngine sekiroModEngine)
+                {
+                    // Use the async method with status updates for complex file extraction
+                    return await sekiroModEngine.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is SekiroMod_CombinedSFX sekiroCombinedSFX)
+                {
+                    // Use the async method with status updates for simple file extraction
+                    return await sekiroCombinedSFX.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is SekiroMod_DivineDragonTextures sekiroTextures)
+                {
+                    // Use the async method with status updates for simple file extraction
+                    return await sekiroTextures.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else if (mod is SekiroMod_Randomizer sekiroRandomizer)
+                {
+                    // Use the async method with status updates for UI-based installation
+                    return await sekiroRandomizer.TryInstallModAsync(_game.InstallPath!, message =>
+                    {
+                        mainWindow?.UpdateOverlayStatus(message);
+                    });
+                }
+                else
+                {
+                    // For other mods, provide basic status reporting
+                    return await Task.Run(async () => {
+                        try
+                        {
+                            mainWindow?.UpdateOverlayStatus($"Preparing {mod.Name} installation...");
+                            await Task.Delay(500);
+
+                            mainWindow?.UpdateOverlayStatus($"Copying files for {mod.Name}...");
+                            await Task.Delay(1000);
+
+                            // Perform the actual mod installation
+                            bool result = mod.TryInstallMod(_game.InstallPath!);
+
+                            if (result)
+                            {
+                                mainWindow?.UpdateOverlayStatus($"Successfully installed {mod.Name}");
+                            }
+                            else
+                            {
+                                mainWindow?.UpdateOverlayStatus($"Failed to install {mod.Name}");
+                            }
+
+                            await Task.Delay(500);
+                            return result;
+                        }
+                        catch (Exception ex)
+                        {
+                            mainWindow?.UpdateOverlayStatus($"Error installing {mod.Name}: {ex.Message}");
+                            return false;
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in InstallModWithOutputCaptureAsync: {ex.Message}");
+                mainWindow?.UpdateOverlayStatus($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private async void OnRemoveAllModsClick(object sender, RoutedEventArgs e)
         {
             if (_game == null || _gameManager == null) return;
 
-            var result = MessageBox.Show("Are you sure you want to remove all mods?", 
+            var result = MessageBox.Show("Are you sure you want to remove all mods?",
                 "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
-                var success = _gameManager.ClearAllMods();
-                if (success)
+                // Get reference to main window
+                var mainWindow = Application.Current.MainWindow as MainWindow;
+                
+                try
                 {
-                    MessageBox.Show("All mods removed successfully!", "Success", 
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                    IsDirty = false;
-                    RefreshModList();
+                    // Show overlay
+                    mainWindow?.ShowOverlay("Preparing to remove mods...");
+                    
+                    // Disable the button to prevent multiple clicks
+                    if (sender is Button button)
+                    {
+                        button.IsEnabled = false;
+                    }
+
+                    var success = await RemoveAllModsAsync(mainWindow);
+                    
+                    // Hide overlay
+                    mainWindow?.HideOverlay();
+                    
+                    if (success)
+                    {
+                        MessageBox.Show("All mods removed successfully!", "Success",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        IsDirty = false;
+                        RefreshModList();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Failed to remove mods. Please check the game path.",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    mainWindow?.HideOverlay();
+                    MessageBox.Show($"Error during mod removal: {ex.Message}",
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    // Re-enable the button
+                    if (sender is Button button)
+                    {
+                        button.IsEnabled = true;
+                    }
+                }
+            }
+        }
+
+        private async Task<bool> RemoveAllModsAsync(MainWindow? mainWindow)
+        {
+            if (_game == null || _gameManager == null) return false;
+
+            return await _gameManager.ClearAllModsAsync(message =>
+            {
+                mainWindow?.UpdateOverlayStatus(message);
+            });
+        }
+
+        private async Task<bool> RemoveModAsync(IMod mod, MainWindow? mainWindow)
+        {
+            if (_game == null) return false;
+
+            try
+            {
+                // For mods that might need process execution (like DS1 Item Randomizer revert)
+                if (mod is DS1Mod_ItemRandomizer itemRandomizer)
+                {
+                    // Use async removal with status updates
+                    return await RemoveDS1ItemRandomizerAsync(itemRandomizer, mainWindow);
                 }
                 else
                 {
-                    MessageBox.Show("Failed to remove mods. Please check the game path.", 
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    // For other mods, just run the regular removal in a task
+                    return await Task.Run(() =>
+                    {
+                        try
+                        {
+                            mainWindow?.UpdateOverlayStatus($"Cleaning up {mod.Name} files...");
+                            return mod.TryRemoveMod(_game.InstallPath!);
+                        }
+                        catch (Exception)
+                        {
+                            return false;
+                        }
+                    });
                 }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private async Task<bool> RemoveDS1ItemRandomizerAsync(DS1Mod_ItemRandomizer itemRandomizer, MainWindow? mainWindow)
+        {
+            if (_game == null) return false;
+
+            try
+            {
+                mainWindow?.UpdateOverlayStatus("Reverting Dark Souls 1 Item Randomizer changes...");
+                
+                // First, revert the game data to vanilla
+                string randomizerPath = System.IO.Path.Combine(_game.InstallPath!, "randomizer_gui.exe");
+                if (File.Exists(randomizerPath))
+                {
+                    try
+                    {
+                        mainWindow?.UpdateOverlayStatus("Running randomizer revert process...");
+                        
+                        var processInfo = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = randomizerPath,
+                            WorkingDirectory = _game.InstallPath!,
+                            Arguments = "--revert",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        using (var process = System.Diagnostics.Process.Start(processInfo))
+                        {
+                            if (process != null)
+                            {
+                                await process.WaitForExitAsync();
+                                
+                                // Read output for debugging but don't spam UI
+                                string output = await process.StandardOutput.ReadToEndAsync();
+                                string error = await process.StandardError.ReadToEndAsync();
+                                
+                                if (!string.IsNullOrEmpty(output))
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Item Randomizer Revert Output: {output}");
+                                }
+                                if (!string.IsNullOrEmpty(error))
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Item Randomizer Revert Error: {error}");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error running revert process: {ex.Message}");
+                        // Continue with cleanup even if revert fails
+                    }
+                }
+
+                mainWindow?.UpdateOverlayStatus("Removing Item Randomizer files...");
+                
+                // Now remove the mod files using the regular method
+                return await Task.Run(() => itemRandomizer.TryRemoveMod(_game.InstallPath!));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in RemoveDS1ItemRandomizerAsync: {ex.Message}");
+                return false;
             }
         }
 
