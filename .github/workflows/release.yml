@@ -81,6 +81,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore SoulsConfigurator/SoulsConfigurator.sln
 
+    - name: Restore dependencies with runtime
+      run: dotnet restore SoulsConfigurator/SoulsModConfigurator/SoulsModConfigurator.csproj --runtime win-x64
+
     - name: Build project
       run: dotnet build SoulsConfigurator/SoulsConfigurator.sln --configuration Release --no-restore
 
