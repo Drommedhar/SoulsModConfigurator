@@ -55,6 +55,146 @@
             <Label x:Name="lblStatus" Content="Status: Something really important will be displayed here. Yes yes!" HorizontalAlignment="Center"/>
         </StackPanel>
 
+        <!-- Download Progress Panel with FIXED WIDTH -->
+        <Border x:Name="DownloadPanel"
+                Background="#DD2D2D30"
+                BorderBrush="#FF4472C4"
+                BorderThickness="2"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="550"
+                Visibility="Collapsed"
+                Padding="30">
+            <StackPanel Orientation="Vertical">
+                <!-- Header with download GIF and title - FIXED WIDTH -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <Image gif:ImageBehavior.AnimatedSource="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_42fe2f0cce6d4da085a4ec2e5962c386/default/dark/1.0" 
+                           Width="32" Height="32" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="txtDownloadTitle"
+                               Text="Downloading file 1 of 5"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               Width="450"
+                               Margin="15,0,0,0"/>
+                </StackPanel>
+
+                <!-- File name and size info with FIXED WIDTHS -->
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,0,15">
+                    <TextBlock x:Name="txtDownloadFileName"
+                               Text="example_mod.zip"
+                               FontSize="16"
+                               Foreground="#FFCCCCCC"
+                               HorizontalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Width="450"
+                               TextAlignment="Center"/>
+                    <TextBlock x:Name="txtDownloadSize"
+                               Text=""
+                               FontSize="12"
+                               Foreground="#FF888888"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Width="450"
+                               Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <!-- Simple Progress Bar using standard WPF ProgressBar with FIXED WIDTH -->
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <!-- Progress bar with visual container - FIXED WIDTH to prevent resizing -->
+                    <Border Background="#FF1E1E1E" 
+                            BorderBrush="#FF404040" 
+                            BorderThickness="2" 
+                            CornerRadius="12"
+                            Padding="4"
+                            Margin="0,0,0,10"
+                            Width="400"
+                            HorizontalAlignment="Center">
+                        <ProgressBar x:Name="downloadProgressBar"
+                                     Height="18"
+                                     Width="392"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="0"
+                                     Background="#FF2D2D30"
+                                     BorderThickness="0"
+                                     HorizontalAlignment="Center">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ProgressBar">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        CornerRadius="8">
+                                                    <Grid>
+                                                        <!-- Background -->
+                                                        <Border Background="#FF3F3F46" 
+                                                                CornerRadius="8"/>
+                                                        <!-- Progress fill -->
+                                                        <Border Name="PART_Track" 
+                                                                CornerRadius="8">
+                                                            <Border Name="PART_Indicator" 
+                                                                    Background="{TemplateBinding Foreground}"
+                                                                    HorizontalAlignment="Left"
+                                                                    CornerRadius="8"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter Property="Foreground">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#FF4CAF50" Offset="0"/>
+                                                <GradientStop Color="#FF66BB6A" Offset="0.5"/>
+                                                <GradientStop Color="#FF4CAF50" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <!-- Indeterminate animation for unknown progress -->
+                                    <Style.Triggers>
+                                        <Trigger Property="IsIndeterminate" Value="True">
+                                            <Setter Property="Foreground">
+                                                <Setter.Value>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                        <GradientStop Color="#FFFF9800" Offset="0"/>
+                                                        <GradientStop Color="#FFFFC107" Offset="0.5"/>
+                                                        <GradientStop Color="#FFFF9800" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                    </Border>
+                    
+                    <!-- Progress info -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock x:Name="txtDownloadPercentage"
+                                   Text="0.0%"
+                                   FontSize="14"
+                                   Foreground="White"
+                                   FontWeight="Bold"
+                                   Margin="0,0,10,0"/>
+                        <TextBlock Text="•"
+                                   FontSize="14"
+                                   Foreground="#FFCCCCCC"
+                                   Margin="0,0,10,0"/>
+                        <TextBlock x:Name="txtDownloadSpeed"
+                                   Text="0 B/s"
+                                   FontSize="14"
+                                   Foreground="#FFCCCCCC"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Notification Panel -->
         <Border x:Name="NotificationPanel"
                 Background="#DD2D2D30"

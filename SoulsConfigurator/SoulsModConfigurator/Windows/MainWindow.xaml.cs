@@ -126,6 +126,10 @@ namespace SoulsModConfigurator
             gameViewDS3?.Initialize(_gameTabMapping["Dark Souls 3"], _gameManager, _presetService, _downloadService);
             gameViewSekiro?.Initialize(_gameTabMapping["Sekiro"], _gameManager, _presetService, _downloadService);
 
+            // Initialize the download view (no specific game needed)
+            var downloadView = FindName("DownloadView") as DownloadViewCtrl;
+            // The DownloadViewCtrl doesn't need explicit initialization as it handles its own setup
+
             // Check if a game was auto-selected during initialization
             var selectedGame = _gameManager.GetSelectedGame();
             if (selectedGame != null)

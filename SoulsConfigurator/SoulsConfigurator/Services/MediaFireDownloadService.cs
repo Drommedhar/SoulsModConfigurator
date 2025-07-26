@@ -18,6 +18,7 @@ namespace SoulsConfigurator.Services
         private TaskCompletionSource<bool>? _downloadCompletion;
         private string? _expectedFileName;
         private string? _outputPath;
+        private long _expectedSizeBytes = 0;
         private bool _disposed = false;
         
         public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
@@ -30,8 +31,9 @@ namespace SoulsConfigurator.Services
         /// <param name="mediaFireUrl">MediaFire URL (e.g., https://www.mediafire.com/file/xxxxx/filename.exe/file)</param>
         /// <param name="fileName">Expected filename for the downloaded file</param>
         /// <param name="outputPath">Directory where the file should be saved</param>
+        /// <param name="expectedSizeBytes">Expected file size in bytes (optional, for better progress tracking)</param>
         /// <returns>True if download was successful, false otherwise</returns>
-        public async Task<bool> DownloadFileAsync(string mediaFireUrl, string fileName, string outputPath)
+        public async Task<bool> DownloadFileAsync(string mediaFireUrl, string fileName, string outputPath, long expectedSizeBytes = 0)
         {
             if (_disposed)
                 return false;
@@ -40,6 +42,7 @@ namespace SoulsConfigurator.Services
             {
                 _expectedFileName = fileName;
                 _outputPath = outputPath;
+                _expectedSizeBytes = expectedSizeBytes;
                 _downloadCompletion = new TaskCompletionSource<bool>();
                 
                 // Ensure output directory exists
@@ -528,8 +531,8 @@ namespace SoulsConfigurator.Services
                 using var response = await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
                 
-                var totalBytes = response.Content.Headers.ContentLength ?? 0;
-                System.Diagnostics.Debug.WriteLine($"?? File size: {totalBytes} bytes");
+                var totalBytes = response.Content.Headers.ContentLength ?? _expectedSizeBytes;
+                System.Diagnostics.Debug.WriteLine($"?? File size: {totalBytes} bytes ({(response.Content.Headers.ContentLength.HasValue ? "from server" : "expected")})");
                 
                 using var contentStream = await response.Content.ReadAsStreamAsync();
                 using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
@@ -546,30 +549,30 @@ namespace SoulsConfigurator.Services
                     
                     // Throttle progress updates to avoid overwhelming the UI
                     var now = DateTime.Now;
-                    if (totalBytes > 0 && (now - lastProgressUpdate).TotalMilliseconds >= 250) // Update every 250ms
+                    
+                    if (totalBytes > 0 && (now - lastProgressUpdate).TotalMilliseconds >= 250) // Update every 250ms for known size
                     {
-                        var progress = (double)totalBytesRead / totalBytes * 100;
+                        var progress = Math.Min(99.9, (double)totalBytesRead / totalBytes * 100); // Cap at 99.9% until complete
                         System.Diagnostics.Debug.WriteLine($"?? Download progress: {progress:F1}% ({totalBytesRead}/{totalBytes} bytes)");
                         DownloadProgress?.Invoke(this, new DownloadProgressEventArgs(
                             fileName, progress, totalBytesRead, totalBytes));
                         lastProgressUpdate = now;
                     }
-                    else if (totalBytes == 0 && (now - lastProgressUpdate).TotalSeconds >= 2) // For unknown size, update every 2 seconds
+                    else if (totalBytes == 0 && (now - lastProgressUpdate).TotalSeconds >= 1) // For unknown size, update every second
                     {
-                        System.Diagnostics.Debug.WriteLine($"?? Downloaded: {totalBytesRead} bytes");
-                        // For unknown file size, show progress as indeterminate
+                        System.Diagnostics.Debug.WriteLine($"?? Downloaded: {totalBytesRead} bytes (size unknown)");
+                        // For unknown file size, show indeterminate progress with animated segments but no percentage
                         DownloadProgress?.Invoke(this, new DownloadProgressEventArgs(
-                            fileName, 0, totalBytesRead, 0));
+                            fileName, -1, totalBytesRead, 0)); // Use -1 to indicate indeterminate progress
                         lastProgressUpdate = now;
                     }
                 }
                 
-                // Final progress update
-                if (totalBytes > 0)
-                {
-                    DownloadProgress?.Invoke(this, new DownloadProgressEventArgs(
-                        fileName, 100, totalBytes, totalBytes));
-                }
+                // Final progress update - only send 100% when actually complete
+                var finalSize = Math.Max(totalBytes, totalBytesRead); // Use actual downloaded size if larger than expected
+                DownloadProgress?.Invoke(this, new DownloadProgressEventArgs(
+                    fileName, 100, totalBytesRead, finalSize));
+                System.Diagnostics.Debug.WriteLine($"?? Final progress: 100% ({totalBytesRead}/{finalSize} bytes)");
                 
                 System.Diagnostics.Debug.WriteLine($"? MediaFire download completed successfully: {fileName}");
                 DownloadCompleted?.Invoke(this, $"Downloaded: {fileName}");

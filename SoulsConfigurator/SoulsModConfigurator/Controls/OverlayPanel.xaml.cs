@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using SoulsConfigurator.Services;
 
 namespace SoulsModConfigurator.Controls
@@ -18,22 +20,215 @@ namespace SoulsModConfigurator.Controls
         private readonly Queue<NotificationMessage> _notificationQueue = new();
         private bool _isShowingNotification = false;
         private NotificationMessage? _currentNotification = null;
+        
+        // Download progress tracking
+        private DispatcherTimer? _speedTimer;
+        private long _lastBytesDownloaded = 0;
+        private DateTime _lastSpeedUpdate = DateTime.Now;
+        private int _currentFileIndex = 0;
+        private int _totalFiles = 0;
 
         public OverlayPanel()
         {
             InitializeComponent();
             this.Visibility = Visibility.Hidden;
+            InitializeSpeedTimer();
         }
+
+        #region Speed Calculation
+
+        private void InitializeSpeedTimer()
+        {
+            _speedTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _speedTimer.Tick += UpdateDownloadSpeed;
+        }
+
+        private void UpdateDownloadSpeed(object? sender, EventArgs e)
+        {
+            if (DownloadPanel?.Visibility != Visibility.Visible)
+                return;
+
+            var now = DateTime.Now;
+            var timeDiff = (now - _lastSpeedUpdate).TotalSeconds;
+            
+            if (timeDiff > 0 && _lastBytesDownloaded > 0)
+            {
+                var speedBps = _lastBytesDownloaded / timeDiff;
+                var speedText = FormatSpeed(speedBps);
+                
+                if (txtDownloadSpeed != null)
+                    txtDownloadSpeed.Text = speedText;
+            }
+            
+            _lastSpeedUpdate = now;
+        }
+
+        private string FormatSpeed(double bytesPerSecond)
+        {
+            if (bytesPerSecond < 1024)
+                return $"{bytesPerSecond:F0} B/s";
+            else if (bytesPerSecond < 1024 * 1024)
+                return $"{bytesPerSecond / 1024:F1} KB/s";
+            else if (bytesPerSecond < 1024 * 1024 * 1024)
+                return $"{bytesPerSecond / (1024 * 1024):F1} MB/s";
+            else
+                return $"{bytesPerSecond / (1024 * 1024 * 1024):F1} GB/s";
+        }
+
+        #endregion
+
+        #region Download Progress Methods
+
+        /// <summary>
+        /// Shows the download progress overlay with file information
+        /// </summary>
+        public void ShowDownloadProgress(int currentFile, int totalFiles)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => ShowDownloadProgress(currentFile, totalFiles));
+                return;
+            }
+
+            if (currentFile < 1) currentFile = 1;
+            if (totalFiles < 1) totalFiles = 1;
+            if (currentFile > totalFiles) currentFile = totalFiles;
+
+            _currentFileIndex = currentFile;
+            _totalFiles = totalFiles;
+            _lastBytesDownloaded = 0;
+            _lastSpeedUpdate = DateTime.Now;
+
+            if (txtDownloadTitle != null)
+                txtDownloadTitle.Text = $"Downloading file {currentFile} of {totalFiles}";
+            
+            if (txtDownloadFileName != null)
+                txtDownloadFileName.Text = "Preparing...";
+            
+            if (txtDownloadPercentage != null)
+                txtDownloadPercentage.Text = "0.0%";
+            
+            if (txtDownloadSpeed != null)
+                txtDownloadSpeed.Text = "0 B/s";
+
+            if (FindName("txtDownloadSize") is TextBlock txtDownloadSize)
+                txtDownloadSize.Text = "";
+
+            if (FindName("downloadProgressBar") is ProgressBar progressBar)
+            {
+                progressBar.Value = 0;
+                progressBar.IsIndeterminate = false;
+            }
+
+            ShowDownloadPanel();
+            _speedTimer?.Start();
+        }
+
+        /// <summary>
+        /// Updates the download progress with detailed information
+        /// </summary>
+        public void UpdateDownloadProgress(string fileName, double progressPercentage, long bytesDownloaded, long totalBytes)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(() => UpdateDownloadProgress(fileName, progressPercentage, bytesDownloaded, totalBytes), DispatcherPriority.Background);
+                return;
+            }
+
+            try
+            {
+                if (txtDownloadFileName != null && !string.IsNullOrEmpty(fileName))
+                    txtDownloadFileName.Text = fileName;
+
+                if (FindName("txtDownloadSize") is TextBlock txtDownloadSize)
+                {
+                    if (totalBytes > 0)
+                    {
+                        var downloadedMB = bytesDownloaded / (1024.0 * 1024.0);
+                        var totalMB = totalBytes / (1024.0 * 1024.0);
+                        txtDownloadSize.Text = $"{downloadedMB:F1} MB / {totalMB:F1} MB";
+                    }
+                    else if (bytesDownloaded > 0)
+                    {
+                        var downloadedMB = bytesDownloaded / (1024.0 * 1024.0);
+                        txtDownloadSize.Text = $"{downloadedMB:F1} MB downloaded";
+                    }
+                    else
+                    {
+                        txtDownloadSize.Text = "";
+                    }
+                }
+
+                if (FindName("downloadProgressBar") is ProgressBar progressBar)
+                {
+                    if (progressPercentage < 0)
+                    {
+                        progressBar.IsIndeterminate = true;
+                        if (txtDownloadPercentage != null)
+                            txtDownloadPercentage.Text = "Downloading...";
+                    }
+                    else
+                    {
+                        progressBar.IsIndeterminate = false;
+                        progressPercentage = Math.Max(0, Math.Min(100, progressPercentage));
+                        progressBar.Value = progressPercentage;
+                        
+                        if (txtDownloadPercentage != null)
+                            txtDownloadPercentage.Text = $"{progressPercentage:F1}%";
+                    }
+                }
+
+                var now = DateTime.Now;
+                var timeDiff = (now - _lastSpeedUpdate).TotalSeconds;
+                if (timeDiff > 0 && bytesDownloaded >= 0)
+                {
+                    var bytesDelta = bytesDownloaded - _lastBytesDownloaded;
+                    if (bytesDelta > 0)
+                    {
+                        var speedBps = bytesDelta / timeDiff;
+                        var speedText = FormatSpeed(speedBps);
+                        if (txtDownloadSpeed != null)
+                            txtDownloadSpeed.Text = speedText;
+                    }
+                }
+                
+                _lastBytesDownloaded = Math.Max(0, bytesDownloaded);
+                _lastSpeedUpdate = now;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in UpdateDownloadProgress: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Hides the download progress and stops speed calculation
+        /// </summary>
+        public void HideDownloadProgress()
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(HideDownloadProgress);
+                return;
+            }
+
+            _speedTimer?.Stop();
+            _lastBytesDownloaded = 0;
+            _currentFileIndex = 0;
+            _totalFiles = 0;
+            
+            HideWithAnimation();
+        }
+
+        #endregion
 
         #region Loading/Processing Methods
 
-        /// <summary>
-        /// Shows the overlay panel with the specified status message
-        /// </summary>
-        /// <param name="statusMessage">The status message to display</param>
         public void ShowOverlay(string statusMessage = "Processing mod installation...")
         {
-            // Ensure we're on the UI thread
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => ShowOverlay(statusMessage));
@@ -44,28 +239,20 @@ namespace SoulsModConfigurator.Controls
             ShowLoadingPanel();
         }
 
-        /// <summary>
-        /// Hides the overlay panel
-        /// </summary>
         public void HideOverlay()
         {
-            // Ensure we're on the UI thread
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(HideOverlay);
                 return;
             }
 
+            _speedTimer?.Stop();
             HideWithAnimation();
         }
 
-        /// <summary>
-        /// Updates the status message displayed in the overlay
-        /// </summary>
-        /// <param name="statusMessage">The new status message</param>
         public void UpdateStatus(string statusMessage)
         {
-            // Ensure we're on the UI thread
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => UpdateStatus(statusMessage));
@@ -78,19 +265,11 @@ namespace SoulsModConfigurator.Controls
             }
         }
 
-        /// <summary>
-        /// Shows the overlay with a generic message for UI-based executables
-        /// </summary>
-        /// <param name="modName">The name of the mod being processed</param>
         public void ShowForUIExecutable(string modName)
         {
             ShowOverlay($"Configuring {modName}...\nThis may take a moment while the tool opens and processes your settings.");
         }
 
-        /// <summary>
-        /// Shows the overlay for command line executables
-        /// </summary>
-        /// <param name="modName">The name of the mod being processed</param>
         public void ShowForCommandLineExecutable(string modName)
         {
             ShowOverlay($"Installing {modName}...\nProcessing mod installation...");
@@ -100,13 +279,8 @@ namespace SoulsModConfigurator.Controls
 
         #region Notification Methods
 
-        /// <summary>
-        /// Shows a notification message
-        /// </summary>
-        /// <param name="notification">The notification to display</param>
         public void ShowNotification(NotificationMessage notification)
         {
-            // Ensure we're on the UI thread
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => ShowNotification(notification));
@@ -117,9 +291,6 @@ namespace SoulsModConfigurator.Controls
             ProcessNotificationQueue();
         }
 
-        /// <summary>
-        /// Processes the notification queue, showing notifications one by one
-        /// </summary>
         private async void ProcessNotificationQueue()
         {
             if (_isShowingNotification || _notificationQueue.Count == 0)
@@ -132,39 +303,26 @@ namespace SoulsModConfigurator.Controls
             await ShowNotificationInternal(notification);
         }
 
-        /// <summary>
-        /// Internal method to show a single notification
-        /// </summary>
         private async Task ShowNotificationInternal(NotificationMessage notification)
         {
-            // Configure notification content
             txtNotificationTitle.Text = notification.Title;
             txtNotificationContent.Text = notification.Content;
-
-            // Configure close button visibility
             btnCloseNotification.Visibility = notification.IsClosable ? Visibility.Visible : Visibility.Collapsed;
 
-            // Setup links
             SetupNotificationLinks(notification.Links);
-
-            // Show notification panel and hide loading panel
             ShowNotificationPanel();
 
-            // Handle auto-close
             if (notification.AutoCloseAfter.HasValue)
             {
                 await Task.Delay(notification.AutoCloseAfter.Value);
-                if (_currentNotification?.Id == notification.Id) // Check if still current
+                if (_currentNotification?.Id == notification.Id)
                 {
                     CloseCurrentNotification();
                 }
             }
         }
 
-        /// <summary>
-        /// Sets up clickable links in the notification
-        /// </summary>
-        private void SetupNotificationLinks(Dictionary<string, string> links)
+        private void SetupNotificationLinks(Dictionary<string, string>? links)
         {
             pnlNotificationLinks.Children.Clear();
 
@@ -200,32 +358,25 @@ namespace SoulsModConfigurator.Controls
             }
         }
 
-        /// <summary>
-        /// Creates a style for link buttons
-        /// </summary>
         private Style CreateLinkButtonStyle()
         {
             var style = new Style(typeof(Button));
             
-            style.Setters.Add(new Setter(BackgroundProperty, System.Windows.Media.Brushes.Transparent));
+            style.Setters.Add(new Setter(BackgroundProperty, Brushes.Transparent));
             style.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0)));
-            style.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.LightBlue));
+            style.Setters.Add(new Setter(ForegroundProperty, Brushes.LightBlue));
             style.Setters.Add(new Setter(FontSizeProperty, 14.0));
             style.Setters.Add(new Setter(CursorProperty, System.Windows.Input.Cursors.Hand));
             style.Setters.Add(new Setter(HorizontalContentAlignmentProperty, HorizontalAlignment.Left));
             style.Setters.Add(new Setter(PaddingProperty, new Thickness(0)));
 
-            // Hover effect
             var trigger = new Trigger { Property = IsMouseOverProperty, Value = true };
-            trigger.Setters.Add(new Setter(ForegroundProperty, System.Windows.Media.Brushes.White));
+            trigger.Setters.Add(new Setter(ForegroundProperty, Brushes.White));
             style.Triggers.Add(trigger);
 
             return style;
         }
 
-        /// <summary>
-        /// Closes the current notification and shows the next one if available
-        /// </summary>
         private void CloseCurrentNotification()
         {
             _currentNotification = null;
@@ -245,29 +396,30 @@ namespace SoulsModConfigurator.Controls
 
         #region UI Display Methods
 
-        /// <summary>
-        /// Shows the loading panel
-        /// </summary>
         private void ShowLoadingPanel()
         {
             LoadingPanel.Visibility = Visibility.Visible;
+            DownloadPanel.Visibility = Visibility.Collapsed;
             NotificationPanel.Visibility = Visibility.Collapsed;
             ShowWithAnimation();
         }
 
-        /// <summary>
-        /// Shows the notification panel
-        /// </summary>
+        private void ShowDownloadPanel()
+        {
+            LoadingPanel.Visibility = Visibility.Collapsed;
+            DownloadPanel.Visibility = Visibility.Visible;
+            NotificationPanel.Visibility = Visibility.Collapsed;
+            ShowWithAnimation();
+        }
+
         private void ShowNotificationPanel()
         {
             LoadingPanel.Visibility = Visibility.Collapsed;
+            DownloadPanel.Visibility = Visibility.Collapsed;
             NotificationPanel.Visibility = Visibility.Visible;
             ShowWithAnimation();
         }
 
-        /// <summary>
-        /// Shows the overlay with fade-in animation
-        /// </summary>
         private void ShowWithAnimation()
         {
             this.Visibility = Visibility.Visible;
@@ -275,9 +427,6 @@ namespace SoulsModConfigurator.Controls
             storyboard.Begin();
         }
 
-        /// <summary>
-        /// Hides the overlay with fade-out animation
-        /// </summary>
         private void HideWithAnimation()
         {
             var storyboard = (Storyboard)FindResource("FadeOutStoryboard");
@@ -289,12 +438,34 @@ namespace SoulsModConfigurator.Controls
 
         #region Event Handlers
 
-        /// <summary>
-        /// Handles the close button click
-        /// </summary>
         private void BtnCloseNotification_Click(object sender, RoutedEventArgs e)
         {
             CloseCurrentNotification();
+        }
+
+        #endregion
+
+        #region Additional Methods for Download Support
+
+        public void ShowLoading(string message)
+        {
+            ShowOverlay(message);
+        }
+
+        public void Hide()
+        {
+            HideOverlay();
+        }
+
+        public void ShowNotification(string title, string content, string gifUrl)
+        {
+            var notification = new NotificationMessage
+            {
+                Title = title,
+                Content = content,
+                IsClosable = true
+            };
+            ShowNotification(notification);
         }
 
         #endregion

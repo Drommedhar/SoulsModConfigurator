@@ -48,6 +48,16 @@
                 </TabItem.Header>
                 <controls:GameViewCtrl x:Name="GameViewSekiro" VerticalAlignment="Stretch" />
             </TabItem>
+            
+            <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="📥" FontSize="24" VerticalAlignment="Center" Margin="0,0,5,0" />
+                        <Label Content="Downloads" VerticalAlignment="Center" />
+                    </StackPanel>
+                </TabItem.Header>
+                <controls:DownloadViewCtrl x:Name="DownloadView" VerticalAlignment="Stretch" />
+            </TabItem>
 
         </TabControl>
 
