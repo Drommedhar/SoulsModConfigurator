@@ -104,6 +104,83 @@ namespace SoulsModConfigurator
             _overlayPanel?.ShowNotification(notification);
         }
 
+        /// <summary>
+        /// Handles file changes detected in the DownloadView and refreshes all game views
+        /// </summary>
+        private void OnFilesChanged(object? sender, EventArgs e)
+        {
+            // Ensure we're on the UI thread
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => OnFilesChanged(sender, e));
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("Files changed detected - processing file names and refreshing all game views");
+                
+                // Add a small delay to ensure file operations are complete
+                var delayTimer = new System.Windows.Threading.DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(1500) // 1.5 second delay
+                };
+                
+                delayTimer.Tick += async (s, args) =>
+                {
+                    delayTimer.Stop();
+                    
+                    try
+                    {
+                        // Process expected filenames for all games to handle files downloaded with different names
+                        System.Diagnostics.Debug.WriteLine("Creating expected filenames for all games...");
+                        await _downloadService.CreateExpectedFilenamesForGame("DS1");
+                        await _downloadService.CreateExpectedFilenamesForGame("DS2");
+                        await _downloadService.CreateExpectedFilenamesForGame("DS3");
+                        await _downloadService.CreateExpectedFilenamesForGame("Sekiro");
+                        System.Diagnostics.Debug.WriteLine("Expected filenames processing complete");
+                        
+                        // Small additional delay after filename processing
+                        await Task.Delay(500);
+                        
+                        // Refresh all game view controls to update mod availability
+                        var gameViewDS1 = FindName("GameViewDS1") as GameViewCtrl;
+                        var gameViewDS2 = FindName("GameViewDS2") as GameViewCtrl;
+                        var gameViewDS3 = FindName("GameViewDS3") as GameViewCtrl;
+                        var gameViewSekiro = FindName("GameViewSekiro") as GameViewCtrl;
+                        
+                        gameViewDS1?.RefreshModList();
+                        gameViewDS2?.RefreshModList();
+                        gameViewDS3?.RefreshModList();
+                        gameViewSekiro?.RefreshModList();
+                        
+                        System.Diagnostics.Debug.WriteLine("All game views refreshed due to file changes (after filename processing)");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error during filename processing: {ex.Message}");
+                        
+                        // Still refresh the views even if filename processing fails
+                        var gameViewDS1 = FindName("GameViewDS1") as GameViewCtrl;
+                        var gameViewDS2 = FindName("GameViewDS2") as GameViewCtrl;
+                        var gameViewDS3 = FindName("GameViewDS3") as GameViewCtrl;
+                        var gameViewSekiro = FindName("GameViewSekiro") as GameViewCtrl;
+                        
+                        gameViewDS1?.RefreshModList();
+                        gameViewDS2?.RefreshModList();
+                        gameViewDS3?.RefreshModList();
+                        gameViewSekiro?.RefreshModList();
+                    }
+                };
+                
+                delayTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in OnFilesChanged: {ex.Message}");
+            }
+        }
+
         private async void InitializeForm()
         {
             // Set up game-tab mapping
@@ -126,9 +203,12 @@ namespace SoulsModConfigurator
             gameViewDS3?.Initialize(_gameTabMapping["Dark Souls 3"], _gameManager, _presetService, _downloadService);
             gameViewSekiro?.Initialize(_gameTabMapping["Sekiro"], _gameManager, _presetService, _downloadService);
 
-            // Initialize the download view (no specific game needed)
+            // Initialize the download view and subscribe to its FilesChanged event
             var downloadView = FindName("DownloadView") as DownloadViewCtrl;
-            // The DownloadViewCtrl doesn't need explicit initialization as it handles its own setup
+            if (downloadView != null)
+            {
+                downloadView.FilesChanged += OnFilesChanged;
+            }
 
             // Check if a game was auto-selected during initialization
             var selectedGame = _gameManager.GetSelectedGame();

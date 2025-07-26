@@ -35,6 +35,7 @@ namespace SoulsModConfigurator.Controls
         private UserPresetService? _presetService;
         private ModDownloadService? _downloadService;
         private bool _isDirty = false;
+        private FileSystemWatcher? _fileWatcher;
 
         public bool IsDirty
         {
@@ -53,7 +54,151 @@ namespace SoulsModConfigurator.Controls
         {
             InitializeComponent();
             DataContext = this;
+            
+            // Initialize file watcher when control is loaded
+            Loaded += OnControlLoaded;
+            Unloaded += OnControlUnloaded;
         }
+
+        private void OnControlLoaded(object sender, RoutedEventArgs e)
+        {
+            SetupFileWatcher();
+        }
+
+        private void OnControlUnloaded(object sender, RoutedEventArgs e)
+        {
+            DisposeFileWatcher();
+        }
+
+        private void SetupFileWatcher()
+        {
+            if (_fileWatcher != null) return;
+            
+            try
+            {
+                // Create Data directory if it doesn't exist
+                string dataPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Data");
+                if (!Directory.Exists(dataPath))
+                {
+                    Directory.CreateDirectory(dataPath);
+                }
+
+                _fileWatcher = new FileSystemWatcher(dataPath)
+                {
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.CreationTime | NotifyFilters.Size,
+                    // Monitor common mod file types
+                    Filter = "*.*"
+                };
+
+                // Subscribe to events
+                _fileWatcher.Created += OnFileChanged;
+                _fileWatcher.Deleted += OnFileChanged;
+                _fileWatcher.Renamed += OnFileRenamed;
+
+                // Enable monitoring
+                _fileWatcher.EnableRaisingEvents = true;
+                
+                System.Diagnostics.Debug.WriteLine($"File watcher setup for: {dataPath}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error setting up file watcher: {ex.Message}");
+            }
+        }
+
+        private void DisposeFileWatcher()
+        {
+            if (_fileWatcher != null)
+            {
+                _fileWatcher.EnableRaisingEvents = false;
+                _fileWatcher.Created -= OnFileChanged;
+                _fileWatcher.Deleted -= OnFileChanged;
+                _fileWatcher.Renamed -= OnFileRenamed;
+                _fileWatcher.Dispose();
+                _fileWatcher = null;
+                
+                System.Diagnostics.Debug.WriteLine("File watcher disposed");
+            }
+        }
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (IsRelevantModFile(e.FullPath))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"GameViewCtrl detected file change: {e.ChangeType} - {e.FullPath}");
+                    RefreshModListDelayed();
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        {
+            if (IsRelevantModFile(e.FullPath) || IsRelevantModFile(e.OldFullPath))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"GameViewCtrl detected file rename: {e.OldFullPath} -> {e.FullPath}");
+                    RefreshModListDelayed();
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
+        private bool IsRelevantModFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return false;
+            
+            try
+            {
+                string fileName = System.IO.Path.GetFileName(filePath).ToLowerInvariant();
+                string directory = System.IO.Path.GetDirectoryName(filePath)?.ToLowerInvariant() ?? "";
+                
+                // Check if it's in a game-specific data folder
+                if (!directory.Contains("\\data\\") && !directory.Contains("/data/")) return false;
+                
+                // Check for common mod file extensions
+                if (fileName.EndsWith(".zip") || 
+                    fileName.EndsWith(".exe") || 
+                    fileName.EndsWith(".dll") ||
+                    fileName.EndsWith(".ini"))
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void RefreshModListDelayed()
+        {
+            // Debounce rapid file changes by using a timer
+            if (_refreshTimer != null)
+            {
+                _refreshTimer.Stop();
+            }
+            
+            _refreshTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1000) // Increased delay to 1000ms
+            };
+            
+            _refreshTimer.Tick += (s, e) =>
+            {
+                _refreshTimer?.Stop();
+                _refreshTimer = null;
+                RefreshModList();
+            };
+            
+            _refreshTimer.Start();
+        }
+        
+        private System.Windows.Threading.DispatcherTimer? _refreshTimer;
 
         public void Initialize(IGame? game, GameManagerService gameManager, UserPresetService presetService, ModDownloadService downloadService)
         {
@@ -83,6 +228,8 @@ namespace SoulsModConfigurator.Controls
         {
             if (_game == null) return;
 
+            System.Diagnostics.Debug.WriteLine($"RefreshModList called for {_game.Name}");
+
             // This will be handled by the ModListCtrl
             // For now, we'll update the data context
             var modListCtrl = FindChild<ModListCtrl>(this);
@@ -92,7 +239,16 @@ namespace SoulsModConfigurator.Controls
                 modListCtrl.SelectionChanged -= OnModSelectionChanged;
                 modListCtrl.SelectionChanged += OnModSelectionChanged;
                 
+                // Debug: Check mod availability before refresh
+                foreach (var mod in _game.Mods)
+                {
+                    bool isAvailable = mod.IsAvailable();
+                    System.Diagnostics.Debug.WriteLine($"  Mod '{mod.Name}' availability: {isAvailable}");
+                }
+                
                 modListCtrl.RefreshMods(_game.Mods);
+                
+                System.Diagnostics.Debug.WriteLine($"Refreshed mod list for {_game.Name}");
             }
             
             // Update button states after refreshing mods

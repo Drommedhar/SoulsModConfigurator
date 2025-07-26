@@ -55,17 +55,22 @@ namespace SoulsModConfigurator.Controls
             CheckBoxEnabled.IsChecked = false; // Default to unchecked
             
             // Set background color and interaction based on availability
-            if (!mod.IsAvailable())
+            bool isAvailable = mod.IsAvailable();
+            System.Diagnostics.Debug.WriteLine($"ModEntryCtrl.Initialize: '{mod.Name}' availability: {isAvailable}");
+            
+            if (!isAvailable)
             {
                 // Normal background color but with a slight red tint
                 Background = new SolidColorBrush(Color.FromRgb(55, 35, 39)); // Slightly red-tinted version of normal color
                 CheckBoxEnabled.Content += " ⚠ Missing Files";
                 CheckBoxEnabled.IsEnabled = false; // Disable interaction
+                System.Diagnostics.Debug.WriteLine($"  Set '{mod.Name}' as MISSING FILES");
             }
             else
             {
                 Background = new SolidColorBrush(Color.FromRgb(34, 35, 39)); // Match the design color
                 CheckBoxEnabled.IsEnabled = true; // Enable interaction
+                System.Diagnostics.Debug.WriteLine($"  Set '{mod.Name}' as AVAILABLE");
             }
 
             // Handle configurable mods

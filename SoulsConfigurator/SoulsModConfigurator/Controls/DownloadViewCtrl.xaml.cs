@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using SoulsConfigurator.Services;
 using System.Net.Http;
 using System.Text.Json;
+using System.IO;
 
 namespace SoulsModConfigurator.Controls
 {
@@ -15,6 +16,7 @@ namespace SoulsModConfigurator.Controls
         private readonly ModDownloadService _downloadService;
         private readonly NexusModsService _nexusService;
         private bool _isPremium = false;
+        private FileSystemWatcher? _fileWatcher;
 
         // UI Elements (manually defined to avoid XAML compilation issues)
         private TextBlock _statusIcon;
@@ -31,6 +33,9 @@ namespace SoulsModConfigurator.Controls
         private Border _missingFilesPanel;
         private ItemsControl _missingFilesList;
 
+        // Event to notify when files change - this will be used by MainWindow to refresh all game views
+        public event EventHandler? FilesChanged;
+
         public DownloadViewCtrl()
         {
             InitializeComponent();
@@ -42,8 +47,152 @@ namespace SoulsModConfigurator.Controls
             _downloadService.DownloadFailed += OnDownloadFailed;
             
             Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             FindUIElements();
         }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Task.Run(async () => await UpdateAuthenticationStatus());
+            UpdateGameSelection();
+            SetupFileWatcher();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            DisposeFileWatcher();
+        }
+
+        private void SetupFileWatcher()
+        {
+            if (_fileWatcher != null) return;
+            
+            try
+            {
+                // Create Data directory if it doesn't exist
+                string dataPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Data");
+                if (!Directory.Exists(dataPath))
+                {
+                    Directory.CreateDirectory(dataPath);
+                }
+
+                _fileWatcher = new FileSystemWatcher(dataPath)
+                {
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.CreationTime | NotifyFilters.Size,
+                    Filter = "*.*"
+                };
+
+                // Subscribe to events
+                _fileWatcher.Created += OnFileChanged;
+                _fileWatcher.Deleted += OnFileChanged;
+                _fileWatcher.Renamed += OnFileRenamed;
+
+                // Enable monitoring
+                _fileWatcher.EnableRaisingEvents = true;
+                
+                System.Diagnostics.Debug.WriteLine($"DownloadView file watcher setup for: {dataPath}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error setting up file watcher in DownloadView: {ex.Message}");
+            }
+        }
+
+        private void DisposeFileWatcher()
+        {
+            if (_fileWatcher != null)
+            {
+                _fileWatcher.EnableRaisingEvents = false;
+                _fileWatcher.Created -= OnFileChanged;
+                _fileWatcher.Deleted -= OnFileChanged;
+                _fileWatcher.Renamed -= OnFileRenamed;
+                _fileWatcher.Dispose();
+                _fileWatcher = null;
+            }
+        }
+
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            if (IsRelevantModFile(e.FullPath))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"DownloadView detected file change: {e.ChangeType} - {e.FullPath}");
+                    UpdateMissingFilesDelayed();
+                    // Notify MainWindow to refresh all game views
+                    FilesChanged?.Invoke(this, EventArgs.Empty);
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        {
+            if (IsRelevantModFile(e.FullPath) || IsRelevantModFile(e.OldFullPath))
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"DownloadView detected file rename: {e.OldFullPath} -> {e.FullPath}");
+                    UpdateMissingFilesDelayed();
+                    // Notify MainWindow to refresh all game views
+                    FilesChanged?.Invoke(this, EventArgs.Empty);
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
+        private bool IsRelevantModFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return false;
+            
+            try
+            {
+                string fileName = System.IO.Path.GetFileName(filePath).ToLowerInvariant();
+                string directory = System.IO.Path.GetDirectoryName(filePath)?.ToLowerInvariant() ?? "";
+                
+                // Check if it's in a game-specific data folder
+                if (!directory.Contains("\\data\\") && !directory.Contains("/data/")) return false;
+                
+                // Check for common mod file extensions
+                if (fileName.EndsWith(".zip") || 
+                    fileName.EndsWith(".exe") || 
+                    fileName.EndsWith(".dll") ||
+                    fileName.EndsWith(".ini"))
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void UpdateMissingFilesDelayed()
+        {
+            // Debounce rapid file changes
+            if (_refreshTimer != null)
+            {
+                _refreshTimer.Stop();
+            }
+            
+            _refreshTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1000) // Increased delay to 1000ms
+            };
+            
+            _refreshTimer.Tick += (s, e) =>
+            {
+                _refreshTimer?.Stop();
+                _refreshTimer = null;
+                UpdateMissingFiles();
+            };
+            
+            _refreshTimer.Start();
+        }
+        
+        private System.Windows.Threading.DispatcherTimer? _refreshTimer;
 
         private void FindUIElements()
         {
@@ -61,12 +210,6 @@ namespace SoulsModConfigurator.Controls
             _rbSekiro = FindName("rbSekiro") as RadioButton;
             _missingFilesPanel = FindName("MissingFilesPanel") as Border;
             _missingFilesList = FindName("MissingFilesList") as ItemsControl;
-        }
-
-        private async void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            await UpdateAuthenticationStatus();
-            UpdateGameSelection();
         }
 
         private async Task UpdateAuthenticationStatus()
@@ -287,9 +430,35 @@ namespace SoulsModConfigurator.Controls
             MessageBox.Show("Download pages have been opened in your browser. Download the main files and save them to the appropriate Data folder.", "Browser Opened", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void BtnCheckFiles_Click(object sender, RoutedEventArgs e)
+        private async void BtnCheckFiles_Click(object sender, RoutedEventArgs e)
         {
-            UpdateMissingFiles();
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("Check Files Again clicked - processing all games");
+                
+                // Process expected filenames for all games to handle files downloaded with different names
+                var game = GetSelectedGame();  // Get the current game
+                System.Diagnostics.Debug.WriteLine($"Creating expected filenames for {game}...");
+                await _downloadService.CreateExpectedFilenamesForGame(game);
+                System.Diagnostics.Debug.WriteLine("Expected filenames processing complete");
+                
+                // Small delay after filename processing
+                await Task.Delay(500);
+                
+                // Update missing files for the current game
+                UpdateMissingFiles();
+                
+                // Also notify that files should be re-checked across all game views
+                FilesChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in BtnCheckFiles_Click: {ex.Message}");
+                
+                // Still try to update the UI even if processing fails
+                UpdateMissingFiles();
+                FilesChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         private void UpdateGameSelection()
