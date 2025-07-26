@@ -12,12 +12,15 @@
 
     <Window.Resources>
         <Style x:Key="GroupBoxStyle" TargetType="GroupBox">
-            <Setter Property="Margin" Value="1"/>
-            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="8"/>
             <Setter Property="BorderBrush" Value="#222225"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Background" Value="#1a1a1e"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinWidth" Value="350"/>
+            <Setter Property="MaxWidth" Value="600"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="GroupBox">
@@ -69,10 +72,10 @@
         </TabControl>
         
         <!-- Single content area for when there's only one tab -->
-        <ScrollViewer x:Name="SingleContentScrollViewer" Grid.Row="0" Margin="15,15,15,10" 
-                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="SingleContentScrollViewer" Grid.Row="0" Margin="15,15,15,10"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                       Visibility="Collapsed">
-            <StackPanel x:Name="SingleContentPanel"/>
+            <WrapPanel x:Name="SingleContentPanel" HorizontalAlignment="Stretch"/>
         </ScrollViewer>
         
         <!-- Bottom Controls -->

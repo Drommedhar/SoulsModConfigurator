@@ -72,10 +72,14 @@ namespace SoulsModConfigurator.Windows
                         Padding = new Thickness(15)
                     };
 
-                    var stackPanel = new StackPanel();
-                    GenerateTabContent(stackPanel, tab.Value);
+                    var wrapPanel = new WrapPanel
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Stretch
+                    };
+                    GenerateTabContent(wrapPanel, tab.Value);
 
-                    scrollViewer.Content = stackPanel;
+                    scrollViewer.Content = wrapPanel;
+                    scrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
                     tabItem.Content = scrollViewer;
                     MainTabControl.Items.Add(tabItem);
                 }
@@ -102,14 +106,25 @@ namespace SoulsModConfigurator.Windows
                 {
                     Header = group.Key,
                     Style = (Style)FindResource("GroupBoxStyle"),
-                    Margin = new Thickness(0, 0, 0, 10)
+                    Margin = new Thickness(5, 5, 5, 5),
+                    MinWidth = 350,
+                    MaxWidth = 600,
+                    VerticalAlignment = VerticalAlignment.Top
                 };
 
                 var groupPanel = new StackPanel();
+                var groupOptions = group.OrderBy(o => o.Order).ThenBy(o => o.Name).ToList();
                 
-                foreach (var option in group.OrderBy(o => o.Order).ThenBy(o => o.Name))
+                foreach (var option in groupOptions)
                 {
-                    var controlContainer = CreateControlForOption(option);
+                    // Check if this is a single control in the group and if the display name is similar to the group name
+                    bool hideLabel = groupOptions.Count == 1 &&
+                                   (string.Equals(option.DisplayName?.Trim(), group.Key?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(option.Name?.Trim(), group.Key?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                    (option.DisplayName?.Trim()?.Contains(group.Key?.Trim() ?? "", StringComparison.OrdinalIgnoreCase) == true) ||
+                                    (group.Key?.Trim()?.Contains(option.DisplayName?.Trim() ?? "", StringComparison.OrdinalIgnoreCase) == true));
+                    
+                    var controlContainer = CreateControlForOption(option, hideLabel);
                     if (controlContainer != null)
                     {
                         groupPanel.Children.Add(controlContainer);
@@ -127,7 +142,7 @@ namespace SoulsModConfigurator.Windows
             }
         }
 
-        private FrameworkElement? CreateControlForOption(ModConfigurationOption option)
+        private FrameworkElement? CreateControlForOption(ModConfigurationOption option, bool hideLabel = false)
         {
             switch (option.ControlType)
             {
@@ -172,23 +187,27 @@ namespace SoulsModConfigurator.Windows
 
                 case ModControlType.TextBox:
                     var textBoxPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    var label = new TextBlock
+                    
+                    if (!hideLabel)
                     {
-                        Text = option.DisplayName + ":",
-                        Style = (Style)FindResource("ControlLabelStyle")
-                    };
+                        var label = new TextBlock
+                        {
+                            Text = option.DisplayName + ":",
+                            Style = (Style)FindResource("ControlLabelStyle")
+                        };
+                        textBoxPanel.Children.Add(label);
+                    }
                     
                     var textBox = new TextBox
                     {
                         Name = SanitizeName(option.Name),
                         Text = option.DefaultValue?.ToString() ?? "",
-                        Width = 220,
+                        Width = hideLabel ? 350 : 280,
                         Margin = new Thickness(0, 4, 0, 4),
                         Padding = new Thickness(8, 4, 8, 4)
                     };
                     textBox.TextChanged += (s, e) => UpdateConfiguration();
                     
-                    textBoxPanel.Children.Add(label);
                     textBoxPanel.Children.Add(textBox);
                     _controls[option.Name] = textBox;
                     
@@ -197,16 +216,21 @@ namespace SoulsModConfigurator.Windows
 
                 case ModControlType.TrackBar:
                     var trackBarPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    var trackBarLabel = new TextBlock
+                    
+                    if (!hideLabel)
                     {
-                        Text = option.DisplayName + ":",
-                        Style = (Style)FindResource("ControlLabelStyle")
-                    };
+                        var trackBarLabel = new TextBlock
+                        {
+                            Text = option.DisplayName + ":",
+                            Style = (Style)FindResource("ControlLabelStyle")
+                        };
+                        trackBarPanel.Children.Add(trackBarLabel);
+                    }
                     
                     var slider = new Slider
                     {
                         Name = SanitizeName(option.Name),
-                        Width = 220,
+                        Width = hideLabel ? 350 : 280,
                         Minimum = option.Properties.ContainsKey("min") ? Convert.ToDouble(option.Properties["min"]) : 0,
                         Maximum = option.Properties.ContainsKey("max") ? Convert.ToDouble(option.Properties["max"]) : 100,
                         Value = Convert.ToDouble(option.DefaultValue),
@@ -229,7 +253,6 @@ namespace SoulsModConfigurator.Windows
                         UpdateConfiguration();
                     };
                     
-                    trackBarPanel.Children.Add(trackBarLabel);
                     trackBarPanel.Children.Add(slider);
                     trackBarPanel.Children.Add(valueLabel);
                     _controls[option.Name] = slider;
@@ -239,16 +262,21 @@ namespace SoulsModConfigurator.Windows
 
                 case ModControlType.ComboBox:
                     var comboBoxPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    var comboBoxLabel = new TextBlock
+                    
+                    if (!hideLabel)
                     {
-                        Text = option.DisplayName + ":",
-                        Style = (Style)FindResource("ControlLabelStyle")
-                    };
+                        var comboBoxLabel = new TextBlock
+                        {
+                            Text = option.DisplayName + ":",
+                            Style = (Style)FindResource("ControlLabelStyle")
+                        };
+                        comboBoxPanel.Children.Add(comboBoxLabel);
+                    }
                     
                     var comboBox = new ComboBox
                     {
                         Name = SanitizeName(option.Name),
-                        Width = 220,
+                        Width = hideLabel ? 350 : 280,
                         Margin = new Thickness(0, 4, 0, 4),
                         Padding = new Thickness(8, 4, 8, 4)
                     };
@@ -265,7 +293,6 @@ namespace SoulsModConfigurator.Windows
                     comboBox.SelectedItem = option.DefaultValue;
                     comboBox.SelectionChanged += (s, e) => UpdateConfiguration();
                     
-                    comboBoxPanel.Children.Add(comboBoxLabel);
                     comboBoxPanel.Children.Add(comboBox);
                     _controls[option.Name] = comboBox;
                     

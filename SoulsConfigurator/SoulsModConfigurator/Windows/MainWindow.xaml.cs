@@ -265,7 +265,7 @@ namespace SoulsModConfigurator
                         Type = NotificationType.Warning,
                         Links = new Dictionary<string, string>
                         {
-                            { "Click here to get it here.", "https://github.com/Drommedhar/SoulsModConfigurator/releases/latest" }
+                            { "Click here to get it.", "https://github.com/Drommedhar/SoulsModConfigurator/releases/latest" }
                         },
                         IsClosable = true
                     });
