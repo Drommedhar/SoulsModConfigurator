@@ -8,8 +8,8 @@
         xmlns:controls="clr-namespace:SoulsModConfigurator.Controls"
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         mc:Ignorable="d"
-        Title="SoulsModConfigurator" Height="450" Width="800"
-        ui:WindowHelper.UseModernWindowStyle="True">
+        Title="SoulsModConfigurator" Height="750" Width="1000"
+        ui:WindowHelper.UseModernWindowStyle="True" WindowStartupLocation="CenterScreen">
     <Grid>
         <TabControl x:Name="tabControlGames" SelectionChanged="TabControlGames_SelectionChanged">
             <TabItem VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">

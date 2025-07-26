@@ -869,14 +869,14 @@ namespace SoulsModConfigurator.Windows
             {
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(20, 0, 20, 20)
+                Margin = new Thickness(20, 0, 20, 0)
             };
 
             var okButton = new Button
             {
                 Content = "OK",
                 Width = 80,
-                Height = 25,
+                Height = 30,
                 Margin = new Thickness(0, 0, 10, 0),
                 IsDefault = true
             };
@@ -885,7 +885,7 @@ namespace SoulsModConfigurator.Windows
             {
                 Content = "Cancel",
                 Width = 80,
-                Height = 25,
+                Height = 30,
                 IsCancel = true
             };
 
