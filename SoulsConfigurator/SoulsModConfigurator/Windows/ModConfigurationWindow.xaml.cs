@@ -674,13 +674,19 @@ namespace SoulsModConfigurator.Windows
                     switch (control)
                     {
                         case CheckBox checkBox:
-                            checkBox.IsChecked = Convert.ToBoolean(kvp.Value);
+                            if(kvp.Value is JsonElement elem)
+                                checkBox.IsChecked = Convert.ToBoolean(elem.ValueKind.ToString());
+                            else
+                                checkBox.IsChecked = Convert.ToBoolean(kvp.Value);
                             break;
                         case TextBox textBox:
                             textBox.Text = kvp.Value?.ToString() ?? "";
                             break;
                         case Slider slider:
-                            slider.Value = Convert.ToDouble(kvp.Value);
+                            if (kvp.Value is JsonElement elem2)
+                                slider.Value = elem2.GetDouble();
+                            else
+                                slider.Value = Convert.ToDouble(kvp.Value);
                             break;
                         case ComboBox comboBox:
                             comboBox.SelectedItem = kvp.Value;
