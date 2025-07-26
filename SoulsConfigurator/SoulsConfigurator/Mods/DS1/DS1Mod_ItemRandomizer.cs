@@ -15,7 +15,6 @@ namespace SoulsConfigurator.Mods.DS1
     {
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;
-        private readonly UserPresetService _presetService;
         private string? _selectedPreset;
 
         public string Name => "Dark Souls 1 Item Randomizer";
@@ -23,7 +22,6 @@ namespace SoulsConfigurator.Mods.DS1
 
         public DS1Mod_ItemRandomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -751,12 +749,12 @@ namespace SoulsConfigurator.Mods.DS1
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -785,7 +783,7 @@ namespace SoulsConfigurator.Mods.DS1
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);

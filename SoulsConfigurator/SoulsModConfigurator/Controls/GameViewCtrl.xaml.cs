@@ -32,7 +32,6 @@ namespace SoulsModConfigurator.Controls
     {
         private IGame? _game;
         private GameManagerService? _gameManager;
-        private UserPresetService? _presetService;
         private ModDownloadService? _downloadService;
         private bool _isDirty = false;
         private FileSystemWatcher? _fileWatcher;
@@ -200,12 +199,18 @@ namespace SoulsModConfigurator.Controls
         
         private System.Windows.Threading.DispatcherTimer? _refreshTimer;
 
-        public void Initialize(IGame? game, GameManagerService gameManager, UserPresetService presetService, ModDownloadService downloadService)
+        public void Initialize(IGame? game, GameManagerService gameManager, ModDownloadService downloadService)
         {
             _game = game;
             _gameManager = gameManager;
-            _presetService = presetService;
             _downloadService = downloadService;
+
+            // Initialize the ModListCtrl - it will use the singleton UserPresetService
+            var modListCtrl = FindChild<ModListCtrl>(this);
+            if (modListCtrl != null)
+            {
+                modListCtrl.Initialize();
+            }
 
             RefreshForSelectedGame();
         }

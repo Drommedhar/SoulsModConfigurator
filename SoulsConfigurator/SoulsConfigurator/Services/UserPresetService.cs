@@ -12,15 +12,37 @@ namespace SoulsConfigurator.Services
         private const int CurrentPresetVersion = 2; // Updated for radio button changes
         private readonly string _presetsPath;
 
+        // Singleton instance
+        private static UserPresetService? _instance;
+        private static readonly object _lock = new object();
+
         // Event to notify when presets are changed
         public event EventHandler<PresetChangedEventArgs>? PresetChanged;
 
-        public UserPresetService()
+        private UserPresetService()
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var appFolder = Path.Combine(appDataPath, "SoulsConfigurator");
             Directory.CreateDirectory(appFolder);
             _presetsPath = Path.Combine(appFolder, PresetsFileName);
+        }
+
+        public static UserPresetService Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new UserPresetService();
+                        }
+                    }
+                }
+                return _instance;
+            }
         }
 
         public List<UserPreset> LoadPresets(string modName)

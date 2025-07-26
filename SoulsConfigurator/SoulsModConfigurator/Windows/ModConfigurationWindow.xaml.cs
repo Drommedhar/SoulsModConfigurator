@@ -22,14 +22,14 @@ namespace SoulsModConfigurator.Windows
         public Dictionary<string, object> SavedConfiguration { get; private set; } = new();
         public bool DialogResultValue { get; private set; } = false;
 
-        public ModConfigurationWindow(ModConfiguration modConfiguration, UserPresetService? presetService = null)
+        public ModConfigurationWindow(ModConfiguration modConfiguration)
         {
             InitializeComponent();
             
             _modConfiguration = modConfiguration;
             _controls = new Dictionary<string, FrameworkElement>();
             _currentConfiguration = new Dictionary<string, object>();
-            _presetService = presetService ?? new UserPresetService();
+            _presetService = UserPresetService.Instance;
             
             Title = $"{_modConfiguration.ModName} Configuration";
             
@@ -802,6 +802,11 @@ namespace SoulsModConfigurator.Windows
             PresetComboBox.SelectedItem = presetName;
             _currentlyLoadedPresetName = presetName;
             UpdateSaveButtonText();
+
+            // Set the saved configuration and dialog result values to indicate success
+            SavedConfiguration = new Dictionary<string, object>(_currentConfiguration);
+            DialogResultValue = true;
+            DialogResult = true;
 
             Close();
         }

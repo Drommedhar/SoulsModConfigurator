@@ -14,7 +14,6 @@ namespace SoulsConfigurator.Mods.DS1
     {
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;
-        private readonly UserPresetService _presetService;
         private string? _selectedPreset;
         private EnemyConfigManager? _enemyConfigManager;
 
@@ -23,7 +22,6 @@ namespace SoulsConfigurator.Mods.DS1
 
         public DS1Mod_EnemyRandomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -605,12 +603,12 @@ namespace SoulsConfigurator.Mods.DS1
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset != null)
             {
                 _selectedPreset = presetName;
@@ -636,7 +634,7 @@ namespace SoulsConfigurator.Mods.DS1
 
         public string[] GetPresetNames()
         {
-            var presets = _presetService.LoadPresets(Name);
+            var presets = UserPresetService.Instance.LoadPresets(Name);
             return presets.Select(p => p.Name).ToArray();
         }
 
@@ -648,18 +646,18 @@ namespace SoulsConfigurator.Mods.DS1
                 Description = $"Enemy configuration preset: {presetName}",
                 OptionValues = configuration
             };
-            _presetService.SavePreset(Name, preset);
+            UserPresetService.Instance.SavePreset(Name, preset);
         }
 
         public Dictionary<string, object>? LoadPreset(string presetName)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             return preset?.OptionValues;
         }
 
         public void DeletePreset(string presetName)
         {
-            _presetService.DeletePreset(Name, presetName);
+            UserPresetService.Instance.DeletePreset(Name, presetName);
         }
 
         public void SetSelectedPreset(string? presetName)

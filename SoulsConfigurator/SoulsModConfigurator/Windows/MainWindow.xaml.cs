@@ -24,7 +24,6 @@ namespace SoulsModConfigurator
     public partial class MainWindow : Window
     {
         private readonly GameManagerService _gameManager;
-        private readonly UserPresetService _presetService;
         private readonly ModDownloadService _downloadService;
         private readonly VersionCheckService _versionCheckService;
         private readonly Dictionary<string, IGame> _gameTabMapping;
@@ -35,7 +34,6 @@ namespace SoulsModConfigurator
             InitializeComponent();
             
             _gameManager = new GameManagerService();
-            _presetService = new UserPresetService();
             _downloadService = new ModDownloadService();
             _versionCheckService = new VersionCheckService();
             _gameTabMapping = new Dictionary<string, IGame>();
@@ -43,8 +41,8 @@ namespace SoulsModConfigurator
             // Get reference to overlay panel
             _overlayPanel = FindName("pnlInfo") as OverlayPanel;
             
-            // Subscribe to preset change events
-            _presetService.PresetChanged += OnPresetChanged;
+            // Subscribe to preset change events from the singleton instance
+            UserPresetService.Instance.PresetChanged += OnPresetChanged;
             
             // Subscribe to notification service events
             NotificationService.Instance.NotificationRequested += OnNotificationRequested;
@@ -198,10 +196,10 @@ namespace SoulsModConfigurator
             var gameViewDS3 = FindName("GameViewDS3") as GameViewCtrl;
             var gameViewSekiro = FindName("GameViewSekiro") as GameViewCtrl;
             
-            gameViewDS1?.Initialize(_gameTabMapping["Dark Souls 1"], _gameManager, _presetService, _downloadService);
-            gameViewDS2?.Initialize(_gameTabMapping["Dark Souls 2"], _gameManager, _presetService, _downloadService);
-            gameViewDS3?.Initialize(_gameTabMapping["Dark Souls 3"], _gameManager, _presetService, _downloadService);
-            gameViewSekiro?.Initialize(_gameTabMapping["Sekiro"], _gameManager, _presetService, _downloadService);
+            gameViewDS1?.Initialize(_gameTabMapping["Dark Souls 1"], _gameManager, _downloadService);
+            gameViewDS2?.Initialize(_gameTabMapping["Dark Souls 2"], _gameManager, _downloadService);
+            gameViewDS3?.Initialize(_gameTabMapping["Dark Souls 3"], _gameManager, _downloadService);
+            gameViewSekiro?.Initialize(_gameTabMapping["Sekiro"], _gameManager, _downloadService);
 
             // Initialize the download view and subscribe to its FilesChanged event
             var downloadView = FindName("DownloadView") as DownloadViewCtrl;
@@ -320,7 +318,7 @@ namespace SoulsModConfigurator
                     if (selectedTab.Content is GameViewCtrl gameView)
                     {
                         // Always re-initialize to ensure proper setup
-                        gameView.Initialize(game, _gameManager, _presetService, _downloadService);
+                        gameView.Initialize(game, _gameManager, _downloadService);
                         
                         // Use dispatcher to ensure UI is ready
                         Dispatcher.BeginInvoke(new Action(() =>
@@ -370,8 +368,8 @@ namespace SoulsModConfigurator
             {
                 await Task.Run(() =>
                 {
-                    // Check for outdated presets
-                    _presetService.CheckForOutdatedPresets();
+                    // Check for outdated presets using singleton instance
+                    UserPresetService.Instance.CheckForOutdatedPresets();
                 });
             }
             catch (Exception ex)

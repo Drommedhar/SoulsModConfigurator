@@ -22,11 +22,9 @@ namespace SoulsConfigurator.Mods.Sekiro
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath;
-        private readonly UserPresetService _presetService;
 
         public SekiroMod_Randomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -637,12 +635,12 @@ namespace SoulsConfigurator.Mods.Sekiro
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -986,7 +984,7 @@ namespace SoulsConfigurator.Mods.Sekiro
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);

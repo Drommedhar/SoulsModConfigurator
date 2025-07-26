@@ -23,11 +23,9 @@ namespace SoulsConfigurator.Mods.DS1
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath; // Store the executable path
-        private readonly UserPresetService _presetService;
 
         public DS1Mod_FogGate()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -307,7 +305,7 @@ namespace SoulsConfigurator.Mods.DS1
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public void SaveConfiguration(Dictionary<string, object> configuration)
@@ -332,7 +330,7 @@ namespace SoulsConfigurator.Mods.DS1
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);
@@ -412,7 +410,7 @@ namespace SoulsConfigurator.Mods.DS1
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 

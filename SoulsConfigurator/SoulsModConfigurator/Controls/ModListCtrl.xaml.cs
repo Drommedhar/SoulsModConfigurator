@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SoulsConfigurator.Interfaces;
+using SoulsConfigurator.Services;
 
 namespace SoulsModConfigurator.Controls
 {
@@ -29,6 +30,11 @@ namespace SoulsModConfigurator.Controls
         public ModListCtrl()
         {
             InitializeComponent();
+        }
+
+        public void Initialize()
+        {
+            // No longer need to pass anything - UserPresetService is singleton
         }
 
         public void RefreshMods(List<IMod> mods)

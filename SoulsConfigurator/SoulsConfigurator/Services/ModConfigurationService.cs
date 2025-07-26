@@ -9,12 +9,10 @@ namespace SoulsConfigurator.Services
     public class ModConfigurationService
     {
         private readonly List<IConfigurableMod> _configurableMods;
-        private readonly UserPresetService _presetService;
 
         public ModConfigurationService()
         {
             _configurableMods = new List<IConfigurableMod>();
-            _presetService = new UserPresetService();
         }
 
         public void RegisterMod(IConfigurableMod mod)
@@ -58,7 +56,7 @@ namespace SoulsConfigurator.Services
 
         public Dictionary<string, object> CreateConfigurationFromUserPreset(string modName, string presetName)
         {
-            var preset = _presetService.GetPreset(modName, presetName);
+            var preset = UserPresetService.Instance.GetPreset(modName, presetName);
             return preset?.OptionValues ?? new Dictionary<string, object>();
         }
 
@@ -100,12 +98,12 @@ namespace SoulsConfigurator.Services
 
         public void SaveUserPreset(string modName, UserPreset preset)
         {
-            _presetService.SavePreset(modName, preset);
+            UserPresetService.Instance.SavePreset(modName, preset);
         }
 
         public void DeleteUserPreset(string modName, string presetName)
         {
-            _presetService.DeletePreset(modName, presetName);
+            UserPresetService.Instance.DeletePreset(modName, presetName);
         }
     }
 }
