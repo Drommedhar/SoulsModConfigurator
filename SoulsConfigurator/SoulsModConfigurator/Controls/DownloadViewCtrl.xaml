@@ -1,0 +1,247 @@
+<UserControl x:Class="SoulsModConfigurator.Controls.DownloadViewCtrl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1E1E1E" Padding="20,15">
+            <TextBlock Text="Mod Downloads" FontSize="24" FontWeight="Light" Foreground="White"/>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Authentication Status Panel -->
+                <Border x:Name="AuthStatusPanel" Grid.Row="0" 
+                        Background="#2D2D30" 
+                        BorderBrush="#3F3F46" 
+                        BorderThickness="1" 
+                        CornerRadius="4"
+                        Padding="15"
+                        Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Status Icon -->
+                        <TextBlock x:Name="StatusIcon" 
+                                   Grid.Column="0"
+                                   Text="⚠" 
+                                   FontSize="24" 
+                                   Foreground="#FFA500"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,15,0"/>
+
+                        <!-- Status Text -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="StatusTitle" 
+                                       Text="Not Authenticated with Nexus Mods" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                            <TextBlock x:Name="StatusDescription" 
+                                       Text="Authenticate to enable automatic downloads from Nexus Mods" 
+                                       FontSize="12" 
+                                       Foreground="#B0B0B0"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <!-- Action Button -->
+                        <Button x:Name="AuthButton" 
+                                Grid.Column="2"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Content="Authenticate with Nexus"
+                                Padding="15,8"
+                                Click="AuthButton_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Premium Status Warning -->
+                <Border x:Name="PremiumWarningPanel" 
+                        Grid.Row="1"
+                        Background="#3D2F1F" 
+                        BorderBrush="#7A5033" 
+                        BorderThickness="1" 
+                        CornerRadius="4"
+                        Padding="15"
+                        Margin="0,0,0,20"
+                        Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="ℹ" 
+                                   FontSize="20" 
+                                   Foreground="#FFA500"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,15,0"/>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Nexus Premium Required" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                            <TextBlock Text="Automatic downloads from Nexus Mods require a Premium subscription. You can still download mods manually." 
+                                       FontSize="12" 
+                                       Foreground="#B0B0B0"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Download Options -->
+                <StackPanel Grid.Row="2">
+                    <!-- Game Selection -->
+                    <Border Background="#2D2D30"
+                            BorderBrush="#3F3F46"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="20"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="Select Game" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       Margin="0,0,0,15"/>
+                            
+                            <ui:RadioButtons x:Name="GameSelection">
+                                <RadioButton x:Name="rbDS1" Content="Dark Souls Remastered" Tag="DS1" />
+                                <RadioButton x:Name="rbDS2" Content="Dark Souls 2" Tag="DS2" />
+                                <RadioButton x:Name="rbDS3" Content="Dark Souls 3" Tag="DS3" IsChecked="True" />
+                                <RadioButton x:Name="rbSekiro" Content="Sekiro" Tag="Sekiro" />
+                            </ui:RadioButtons>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Download Actions -->
+                    <Border Background="#2D2D30"
+                            BorderBrush="#3F3F46"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="20"
+                            Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="Download Options" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       Margin="0,0,0,15"/>
+
+                            <!-- Automatic Download -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Automatic Download" 
+                                               FontSize="14" 
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <TextBlock x:Name="AutoDownloadDescription"
+                                               Text="Download all required mods automatically (Premium required)" 
+                                               FontSize="12" 
+                                               Foreground="#B0B0B0"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <Button x:Name="btnAutoDownload"
+                                        Grid.Column="1"
+                                        Content="Download All"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Padding="20,8"
+                                        IsEnabled="False"
+                                        Click="BtnAutoDownload_Click"/>
+                            </Grid>
+
+                            <Border Height="1" Background="#3F3F46" Margin="0,15,0,15"/>
+
+                            <!-- Manual Download -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Manual Download" 
+                                               FontSize="14" 
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                    <TextBlock Text="Open download pages in your browser" 
+                                               FontSize="12" 
+                                               Foreground="#B0B0B0"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <Button x:Name="btnManualDownload"
+                                        Grid.Column="1"
+                                        Content="Open Downloads"
+                                        Padding="20,8"
+                                        Click="BtnManualDownload_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Missing Files Status -->
+                    <Border x:Name="MissingFilesPanel"
+                            Background="#2D2D30" 
+                            BorderBrush="#3F3F46" 
+                            BorderThickness="1" 
+                            CornerRadius="4"
+                            Padding="20"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="Missing Files" 
+                                       FontSize="16" 
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       Margin="0,0,0,10"/>
+                            
+                            <ItemsControl x:Name="MissingFilesList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" 
+                                                   FontSize="12"
+                                                   Foreground="#FF6B6B"
+                                                   Margin="0,2"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button x:Name="btnCheckFiles"
+                                    Content="Check Files Again"
+                                    Margin="0,15,0,0"
+                                    HorizontalAlignment="Left"
+                                    Click="BtnCheckFiles_Click"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

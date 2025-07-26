@@ -119,6 +119,6 @@ This project is provided as-is for educational and personal use. Users are respo
 - Thanks to the mod creators for their excellent randomizer tools
 - Thanks to the Dark Souls modding community for their continued innovation
 - Special thanks to contributors who help improve and maintain this tool
-- A very special thanks to [Divi](https://www.twitch.tv/divi) and her community for the idea and testing
+- A very special thanks to [Divi](https://www.twitch.tv/divi) who let's me use her Twitch Emotes and her community for the idea and testing
 
 - Also for DS1 I"m using my forks of [Dark-Souls-Enemy-Randomizer](https://github.com/Drommedhar/Dark-Souls-Enemy-Randomizer) and [DarkSoulsItemRandomizer](https://github.com/Drommedhar/DarkSoulsItemRandomizer) which are adjusted to allow CLI arguments and use INI files for configuration.

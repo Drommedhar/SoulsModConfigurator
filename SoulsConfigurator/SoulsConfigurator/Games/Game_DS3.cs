@@ -291,6 +291,176 @@ namespace SoulsConfigurator.Games
             return true;
         }
 
+        public async Task<bool> InstallModsAsync(List<IMod> mods, Action<string>? statusUpdater = null)
+        {
+            if (string.IsNullOrEmpty(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Checking mod availability...");
+            await Task.Delay(200);
+
+            // Check if all required mods and prerequisites are available
+            if (!_crashFix.IsAvailable())
+            {
+                statusUpdater?.Invoke("Error: Crashfix not available");
+                return false;
+            }
+
+            // Determine if we need ModEngine and which one to use
+            bool shouldUseStandaloneModEngine = ShouldUseStandaloneModEngine(mods);
+            bool hasItemEnemyRandomizer = IsItemEnemyRandomizerInstalled(mods);
+
+            if (shouldUseStandaloneModEngine && !_modEngine.IsAvailable())
+            {
+                statusUpdater?.Invoke("Error: ModEngine not available");
+                return false;
+            }
+
+            // If we need to extract ModEngine from Item/Enemy randomizer, ensure its zip file exists
+            if (hasItemEnemyRandomizer)
+            {
+                string itemEnemyZipPath = Path.Combine("Data", "DS3", "DS3_Item_Enemy_Randomizer.zip");
+                if (!File.Exists(itemEnemyZipPath))
+                {
+                    statusUpdater?.Invoke("Error: Item/Enemy Randomizer zip not found");
+                    return false;
+                }
+            }
+
+            foreach (var mod in mods)
+            {
+                if (!mod.IsAvailable())
+                {
+                    statusUpdater?.Invoke($"Error: {mod.Name} not available");
+                    return false;
+                }
+            }
+
+            statusUpdater?.Invoke("Backing up game files...");
+            await Task.Delay(300);
+            BackupFiles();
+
+            // CRITICAL: Install ModEngine BEFORE installing mods that need to modify modengine.ini
+            if (hasItemEnemyRandomizer)
+            {
+                statusUpdater?.Invoke("Extracting ModEngine from Item/Enemy Randomizer...");
+                if (!ExtractModEngineFromItemEnemyRandomizer())
+                {
+                    return false;
+                }
+            }
+            else if (shouldUseStandaloneModEngine)
+            {
+                statusUpdater?.Invoke("Installing prerequisite: DS3 Mod Engine");
+                if (_modEngine is DS3Mod_ModEngine ds3ModEngine && ds3ModEngine.TryInstallModAsync != null)
+                {
+                    if (!await ds3ModEngine.TryInstallModAsync(_installPath, statusUpdater))
+                    {
+                        return false;
+                    }
+                }
+                else if (!_modEngine.TryInstallMod(_installPath))
+                {
+                    return false;
+                }
+            }
+
+            // Always install crashfix
+            statusUpdater?.Invoke("Installing prerequisite: DS3 Crashfix");
+            if (_crashFix is DS3Mod_Crashfix ds3Crashfix && ds3Crashfix.TryInstallModAsync != null)
+            {
+                if (!await ds3Crashfix.TryInstallModAsync(_installPath, statusUpdater))
+                {
+                    return false;
+                }
+            }
+            else if (!_crashFix.TryInstallMod(_installPath))
+            {
+                return false;
+            }
+
+            // Install all the requested mods
+            int currentMod = 0;
+            int totalMods = mods.Count;
+            foreach (var mod in mods)
+            {
+                currentMod++;
+                statusUpdater?.Invoke($"Installing mod {currentMod} of {totalMods}: {mod.Name}");
+                
+                if (mod is DS3Mod_Item_Enemy ds3ItemEnemy && ds3ItemEnemy.TryInstallModAsync != null)
+                {
+                    if (!await ds3ItemEnemy.TryInstallModAsync(_installPath, statusUpdater))
+                    {
+                        return false;
+                    }
+                }
+                else if (mod is DS3Mod_FogGate ds3FogGate && ds3FogGate.TryInstallModAsync != null)
+                {
+                    if (!await ds3FogGate.TryInstallModAsync(_installPath, statusUpdater))
+                    {
+                        return false;
+                    }
+                }
+                else if (!mod.TryInstallMod(_installPath))
+                {
+                    return false;
+                }
+                
+                await Task.Delay(200);
+            }
+
+            return true;
+        }
+
+        public async Task<bool> ClearModsAsync(Action<string>? statusUpdater = null)
+        {
+            if (string.IsNullOrEmpty(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Starting mod removal...");
+            await Task.Delay(200);
+
+            int currentMod = 0;
+            int totalMods = _mods.Count + 2; // +2 for ModEngine and Crashfix
+            foreach (var mod in _mods)
+            {
+                currentMod++;
+                statusUpdater?.Invoke($"Removing mod {currentMod} of {totalMods}: {mod.Name}");
+                
+                if (!mod.TryRemoveMod(_installPath))
+                {
+                    return false;
+                }
+                
+                await Task.Delay(200);
+            }
+
+            currentMod++;
+            statusUpdater?.Invoke($"Removing prerequisite {currentMod} of {totalMods}: Mod Engine");
+            if (!_modEngine.TryRemoveMod(_installPath))
+            {
+                return false;
+            }
+            await Task.Delay(200);
+
+            currentMod++;
+            statusUpdater?.Invoke($"Removing prerequisite {currentMod} of {totalMods}: Crashfix");
+            if (!_crashFix.TryRemoveMod(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Restoring original game files...");
+            await Task.Delay(300);
+            RestoreFiles();
+
+            return true;
+        }
+
         public bool BackupFiles()
         {
             if (string.IsNullOrEmpty(_installPath))

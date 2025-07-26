@@ -2,6 +2,7 @@ using SoulsConfigurator.Interfaces;
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading.Tasks;
 
 namespace SoulsConfigurator.Mods.Sekiro
 {
@@ -124,6 +125,68 @@ namespace SoulsConfigurator.Mods.Sekiro
 
             // Fallback: place in destination root
             return Path.Combine(destPath, fileName);
+        }
+
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Installing Sekiro Mod Engine...");
+                
+                string sourcePath = Path.Combine("Data", "Sekiro", ModFile);
+                if (!File.Exists(sourcePath))
+                {
+                    statusUpdater?.Invoke("Error: ModEngine.zip not found");
+                    return false;
+                }
+
+                statusUpdater?.Invoke("Extracting Mod Engine files...");
+                await Task.Delay(100); // Small delay to show the message
+
+                // Use ZipArchive for selective extraction from subdirectory
+                using (var archive = ZipFile.OpenRead(sourcePath))
+                {
+                    foreach (var entry in archive.Entries)
+                    {
+                        // Skip empty entries and directories
+                        if (string.IsNullOrEmpty(entry.Name))
+                            continue;
+
+                        // Check if this is a ModEngine file we want to extract
+                        string fileName = Path.GetFileName(entry.FullName);
+                        
+                        // Extract ModEngine essential files: dinput8.dll, modengine.ini, and mod folder contents
+                        if (IsModEngineFile(fileName, entry.FullName))
+                        {
+                            statusUpdater?.Invoke($"Extracting {fileName}...");
+                            
+                            // Extract to the destination, flattening the directory structure for main files
+                            string destinationPath = GetDestinationPath(entry.FullName, destPath);
+                            
+                            // Create directory if it doesn't exist
+                            string? destinationDir = Path.GetDirectoryName(destinationPath);
+                            if (!string.IsNullOrEmpty(destinationDir))
+                            {
+                                Directory.CreateDirectory(destinationDir);
+                            }
+
+                            // Extract the file
+                            entry.ExtractToFile(destinationPath, true);
+                        }
+                    }
+                }
+
+                statusUpdater?.Invoke("Sekiro Mod Engine installed successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
         }
 
         public bool TryRemoveMod(string destPath)

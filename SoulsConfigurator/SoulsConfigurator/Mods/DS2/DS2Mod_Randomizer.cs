@@ -25,11 +25,9 @@ namespace SoulsConfigurator.Mods.DS2
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath;
-        private readonly UserPresetService _presetService;
 
         public DS2Mod_Randomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -2497,6 +2495,46 @@ namespace SoulsConfigurator.Mods.DS2
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS2 Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS2", ModFile), destPath, true);
+
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running DS2 Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("DS2 Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("DS2 Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("DS2 Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try
@@ -2534,12 +2572,12 @@ namespace SoulsConfigurator.Mods.DS2
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -2932,7 +2970,7 @@ namespace SoulsConfigurator.Mods.DS2
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);

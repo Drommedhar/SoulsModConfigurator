@@ -95,6 +95,27 @@ namespace SoulsConfigurator.Services
             return _selectedGame.ClearMods();
         }
 
+        public async Task<bool> InstallSelectedModsAsync(List<IMod> modsToInstall, Action<string>? statusUpdater = null)
+        {
+            if (_selectedGame == null || string.IsNullOrEmpty(_selectedGame.InstallPath))
+            {
+                return false;
+            }
+
+            await _selectedGame.ClearModsAsync(modsToInstall, statusUpdater); // Clear existing mods before installing new ones, passing context
+            return await _selectedGame.InstallModsAsync(modsToInstall, statusUpdater);
+        }
+
+        public async Task<bool> ClearAllModsAsync(Action<string>? statusUpdater = null)
+        {
+            if (_selectedGame == null || string.IsNullOrEmpty(_selectedGame.InstallPath))
+            {
+                return false;
+            }
+
+            return await _selectedGame.ClearModsAsync(statusUpdater);
+        }
+
         public bool SetGameInstallPath(string installPath)
         {
             if (_selectedGame == null)

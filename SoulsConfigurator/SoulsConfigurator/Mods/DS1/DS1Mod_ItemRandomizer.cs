@@ -15,7 +15,6 @@ namespace SoulsConfigurator.Mods.DS1
     {
         private ModConfiguration? _configuration;
         private Dictionary<string, object>? _savedConfiguration;
-        private readonly UserPresetService _presetService;
         private string? _selectedPreset;
 
         public string Name => "Dark Souls 1 Item Randomizer";
@@ -23,7 +22,6 @@ namespace SoulsConfigurator.Mods.DS1
 
         public DS1Mod_ItemRandomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -57,6 +55,49 @@ namespace SoulsConfigurator.Mods.DS1
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Preparing Item Randomizer installation...");
+                
+                statusUpdater?.Invoke("Copying randomizer executable...");
+                File.Copy(
+                    Path.Combine("Data", "DS1", "randomizer_gui.exe"),
+                    Path.Combine(destPath, "randomizer_gui.exe"),
+                    true);
+
+                // If we have saved configuration, run the randomizer with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running Item Randomizer with configuration...");
+                    bool result = await RunWithConfigurationAsync(_savedConfiguration, destPath, statusUpdater);
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("Item Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("Item Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("No configuration provided for Item Randomizer.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try
@@ -72,8 +113,8 @@ namespace SoulsConfigurator.Mods.DS1
                             FileName = randomizerPath,
                             WorkingDirectory = destPath,
                             Arguments = "--revert",
-                            UseShellExecute = true,
-                            CreateNoWindow = false
+                            UseShellExecute = false,
+                            CreateNoWindow = true
                         };
 
                         using (var process = Process.Start(processInfo))
@@ -480,6 +521,62 @@ namespace SoulsConfigurator.Mods.DS1
             };
         }
 
+        private async Task<bool> RunWithConfigurationAsync(Dictionary<string, object> configuration, string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                if (_configuration == null)
+                    return false;
+
+                // Save configuration for potential use during installation
+                _savedConfiguration = configuration;
+
+                statusUpdater?.Invoke("Creating configuration file...");
+                
+                // Create the INI file with the configuration
+                string iniPath = Path.Combine(destPath, "randomizer.ini");
+                CreateIniFile(configuration, iniPath);
+
+                statusUpdater?.Invoke("Starting Item Randomizer process...");
+                
+                // Run the randomizer in scramble mode using command line arguments
+                string randomizerPath = Path.Combine(destPath, "randomizer_gui.exe");
+                
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = randomizerPath,
+                    WorkingDirectory = destPath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    CreateNoWindow = true,
+                    Arguments = "--scramble --config randomizer.ini"
+                };
+
+                using (var process = Process.Start(processInfo))
+                {
+                    if (process == null)
+                    {
+                        statusUpdater?.Invoke("Failed to start Item Randomizer process");
+                        return false;
+                    }
+
+                    // Wait for the process to complete without overwhelming UI updates
+                    statusUpdater?.Invoke("Processing item randomization - please wait...");
+                    await process.WaitForExitAsync();
+                    
+                    bool success = process.ExitCode == 0;
+                    
+                    return success;
+                }
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error executing Item Randomizer: {ex.Message}");
+                return false;
+            }
+        }
+
         public ModConfiguration GetUIConfiguration()
         {
             return _configuration ?? throw new InvalidOperationException("Configuration not initialized");
@@ -652,12 +749,12 @@ namespace SoulsConfigurator.Mods.DS1
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -686,7 +783,7 @@ namespace SoulsConfigurator.Mods.DS1
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);

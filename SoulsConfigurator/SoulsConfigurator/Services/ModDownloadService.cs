@@ -116,7 +116,8 @@ namespace SoulsConfigurator.Services
                 Url = "https://www.mediafire.com/file/2popj38c55nbhx2/DarkSoulsIII.exe/file",
                 FileName = "DarkSoulsIII.exe",
                 OutputFolder = "DS3",
-                Description = "DS3 Crash Fix"
+                Description = "DS3 Crash Fix",
+                ExpectedSizeBytes = 102494368 // 97.7 MB - from user's screenshot
             }
         };
         
@@ -134,6 +135,71 @@ namespace SoulsConfigurator.Services
         }
         
         public bool IsAuthenticated => _nexusService.IsAuthenticated;
+        
+        /// <summary>
+        /// Checks if the authenticated user has Nexus Premium
+        /// </summary>
+        public async Task<bool> CheckPremiumStatusAsync()
+        {
+            if (!IsAuthenticated)
+            {
+                System.Diagnostics.Debug.WriteLine("Premium check: Not authenticated");
+                return false;
+            }
+            
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "SoulsConfigurator/1.1.0");
+                
+                // Get the API key from the NexusModsService
+                var apiKeyField = _nexusService.GetType().GetField("_apiKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var apiKey = apiKeyField?.GetValue(_nexusService) as string;
+                
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    System.Diagnostics.Debug.WriteLine("Premium check: No API key found");
+                    return false;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Premium check: Using API key: {apiKey[..8]}...");
+                httpClient.DefaultRequestHeaders.Add("apikey", apiKey);
+                
+                var response = await httpClient.GetAsync("https://api.nexusmods.com/v1/users/validate.json");
+                System.Diagnostics.Debug.WriteLine($"Premium check: HTTP {response.StatusCode}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"Premium check response: {json}");
+                    
+                    using var doc = System.Text.Json.JsonDocument.Parse(json);
+                    
+                    if (doc.RootElement.TryGetProperty("is_premium", out var isPremiumElement))
+                    {
+                        bool isPremium = isPremiumElement.GetBoolean();
+                        System.Diagnostics.Debug.WriteLine($"Premium check result: {isPremium}");
+                        return isPremium;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Premium check: 'is_premium' property not found in response");
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    System.Diagnostics.Debug.WriteLine($"Premium check failed: {response.StatusCode} - {errorContent}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Premium check error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+            
+            return false;
+        }
         
         /// <summary>
         /// Initiates SSO authentication with Nexus Mods
@@ -341,7 +407,8 @@ namespace SoulsConfigurator.Services
                             var success = await _mediaFireService.DownloadFileAsync(
                                 mediaFireInfo.Url,
                                 mediaFireInfo.FileName,
-                                outputPath);
+                                outputPath,
+                                mediaFireInfo.ExpectedSizeBytes);
                                 
                             if (success)
                             {
@@ -478,7 +545,8 @@ namespace SoulsConfigurator.Services
                     return await _mediaFireService.DownloadFileAsync(
                         mediaFireInfo.Url,
                         mediaFireInfo.FileName,
-                        outputPath);
+                        outputPath,
+                        mediaFireInfo.ExpectedSizeBytes);
                 }
                 
                 DownloadFailed?.Invoke(this, $"Unknown mod key: {modKey}");
@@ -1277,6 +1345,7 @@ namespace SoulsConfigurator.Services
         public string FileName { get; set; } = string.Empty;
         public string OutputFolder { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public long ExpectedSizeBytes { get; set; } = 0; // Expected file size in bytes
     }
     
     public class BrowserDownloadInfo

@@ -1,6 +1,7 @@
 ﻿using SoulsConfigurator.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,29 @@ namespace SoulsConfigurator.Mods.DS3
             }
             catch (Exception)
             {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Installing DS3 Mod Engine...");
+                await Task.Delay(100); // Small delay to show the message
+                
+                statusUpdater?.Invoke("Extracting Mod Engine files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS3", ModFile), destPath);
+                
+                statusUpdater?.Invoke("Mod Engine installed successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
                 return false;
             }
         }

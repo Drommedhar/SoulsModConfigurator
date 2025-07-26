@@ -23,11 +23,9 @@ namespace SoulsConfigurator.Mods.DS1
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath; // Store the executable path
-        private readonly UserPresetService _presetService;
 
         public DS1Mod_FogGate()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -224,6 +222,56 @@ namespace SoulsConfigurator.Mods.DS1
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS1 Fog Gate Randomizer files...");
+                
+                string fogDataPath = Path.Combine("Data", "DS1", "fog");
+                
+                // Create the fog directory if it doesn't exist
+                if (!Directory.Exists(fogDataPath))
+                {
+                    Directory.CreateDirectory(fogDataPath);
+                }
+                
+                // Extract to the fog subdirectory in Data folder
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS1", ModFile), fogDataPath);
+                
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running Fog Gate Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("Fog Gate Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("Fog Gate Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("Fog Gate Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try
@@ -257,7 +305,7 @@ namespace SoulsConfigurator.Mods.DS1
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public void SaveConfiguration(Dictionary<string, object> configuration)
@@ -282,7 +330,7 @@ namespace SoulsConfigurator.Mods.DS1
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);
@@ -362,7 +410,7 @@ namespace SoulsConfigurator.Mods.DS1
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 

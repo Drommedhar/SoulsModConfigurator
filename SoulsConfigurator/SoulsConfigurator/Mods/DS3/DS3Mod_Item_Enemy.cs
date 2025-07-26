@@ -36,11 +36,9 @@ namespace SoulsConfigurator.Mods.DS3
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath; // Store the executable path
-        private readonly UserPresetService _presetService;
 
         public DS3Mod_Item_Enemy()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -660,6 +658,56 @@ namespace SoulsConfigurator.Mods.DS3
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting DS3 Item & Enemy Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "DS3", ModFile), destPath);
+                
+                // Copy Carthus Worm Banned preset if enabled
+                if (_savedConfiguration != null &&
+                    _savedConfiguration.TryGetValue("carthus_worm_banned", out object? presetValue) &&
+                    Convert.ToBoolean(((JsonElement)presetValue).ValueKind.ToString()))
+                {
+                    statusUpdater?.Invoke("Copying Carthus Worm Banned preset...");
+                    CopyCarthusWormPreset(destPath);
+                }
+                
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running DS3 Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    ModAutomationHelper.ModifyModEngineIni(destPath, "randomizer");
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("DS3 Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("DS3 Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("DS3 Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try
@@ -680,12 +728,12 @@ namespace SoulsConfigurator.Mods.DS3
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -1044,7 +1092,7 @@ namespace SoulsConfigurator.Mods.DS3
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);

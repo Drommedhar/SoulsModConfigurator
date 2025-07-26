@@ -80,6 +80,157 @@ namespace SoulsConfigurator.Games
             return true;
         }
 
+        public async Task<bool> InstallModsAsync(List<IMod> mods, Action<string>? statusUpdater = null)
+        {
+            if (string.IsNullOrEmpty(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Checking mod availability...");
+            await Task.Delay(200);
+
+            // Check if all required mods and prerequisites are available
+            if (!_modEngine.IsAvailable() || !_combinedSFX.IsAvailable() || !_divineDragonTextures.IsAvailable())
+            {
+                statusUpdater?.Invoke("Error: Prerequisites not available");
+                return false;
+            }
+
+            foreach (var mod in mods)
+            {
+                if (!mod.IsAvailable())
+                {
+                    statusUpdater?.Invoke($"Error: {mod.Name} not available");
+                    return false;
+                }
+            }
+
+            statusUpdater?.Invoke("Backing up game files...");
+            await Task.Delay(300);
+            BackupFiles();
+
+            // Always install prerequisites first
+            statusUpdater?.Invoke("Installing prerequisite: Sekiro Mod Engine");
+            if (_modEngine is SekiroMod_ModEngine sekiroModEngine && sekiroModEngine.TryInstallModAsync != null)
+            {
+                if (!await sekiroModEngine.TryInstallModAsync(_installPath, statusUpdater))
+                {
+                    return false;
+                }
+            }
+            else if (!_modEngine.TryInstallMod(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Installing prerequisite: Sekiro Combined SFX");
+            if (_combinedSFX is SekiroMod_CombinedSFX combinedSFX && combinedSFX.TryInstallModAsync != null)
+            {
+                if (!await combinedSFX.TryInstallModAsync(_installPath, statusUpdater))
+                {
+                    return false;
+                }
+            }
+            else if (!_combinedSFX.TryInstallMod(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Installing prerequisite: Sekiro Divine Dragon Textures");
+            if (_divineDragonTextures is SekiroMod_DivineDragonTextures textures && textures.TryInstallModAsync != null)
+            {
+                if (!await textures.TryInstallModAsync(_installPath, statusUpdater))
+                {
+                    return false;
+                }
+            }
+            else if (!_divineDragonTextures.TryInstallMod(_installPath))
+            {
+                return false;
+            }
+
+            // Then install selected mods
+            int currentMod = 0;
+            int totalMods = mods.Count;
+            foreach (var mod in mods)
+            {
+                currentMod++;
+                statusUpdater?.Invoke($"Installing mod {currentMod} of {totalMods}: {mod.Name}");
+                
+                if (mod is SekiroMod_Randomizer randomizerMod && randomizerMod.TryInstallModAsync != null)
+                {
+                    if (!await randomizerMod.TryInstallModAsync(_installPath, statusUpdater))
+                    {
+                        return false;
+                    }
+                }
+                else if (!mod.TryInstallMod(_installPath))
+                {
+                    return false;
+                }
+                
+                await Task.Delay(200);
+            }
+
+            return true;
+        }
+
+        public async Task<bool> ClearModsAsync(Action<string>? statusUpdater = null)
+        {
+            if (string.IsNullOrEmpty(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Starting mod removal...");
+            await Task.Delay(200);
+
+            // Remove user-selected mods
+            int currentMod = 0;
+            int totalMods = _mods.Count + 3; // +3 for prerequisites
+            foreach (var mod in _mods)
+            {
+                currentMod++;
+                statusUpdater?.Invoke($"Removing mod {currentMod} of {totalMods}: {mod.Name}");
+                
+                if (!mod.TryRemoveMod(_installPath))
+                {
+                    return false;
+                }
+                await Task.Delay(200);
+            }
+
+            // Remove prerequisites in reverse order
+            currentMod++;
+            statusUpdater?.Invoke($"Removing prerequisite {currentMod} of {totalMods}: Divine Dragon Textures");
+            if (!_divineDragonTextures.TryRemoveMod(_installPath))
+            {
+                return false;
+            }
+            await Task.Delay(200);
+
+            currentMod++;
+            statusUpdater?.Invoke($"Removing prerequisite {currentMod} of {totalMods}: Combined SFX");
+            if (!_combinedSFX.TryRemoveMod(_installPath))
+            {
+                return false;
+            }
+            await Task.Delay(200);
+
+            currentMod++;
+            statusUpdater?.Invoke($"Removing prerequisite {currentMod} of {totalMods}: Mod Engine");
+            if (!_modEngine.TryRemoveMod(_installPath))
+            {
+                return false;
+            }
+
+            statusUpdater?.Invoke("Restoring original game files...");
+            await Task.Delay(300);
+            RestoreFiles();
+            return true;
+        }
+
         public bool ClearMods()
         {
             if (string.IsNullOrEmpty(_installPath))

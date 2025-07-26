@@ -22,11 +22,9 @@ namespace SoulsConfigurator.Mods.Sekiro
         private Dictionary<string, object>? _savedConfiguration;
         private string? _selectedPreset;
         private string? _executablePath;
-        private readonly UserPresetService _presetService;
 
         public SekiroMod_Randomizer()
         {
-            _presetService = new UserPresetService();
             InitializeConfiguration();
         }
 
@@ -555,6 +553,47 @@ namespace SoulsConfigurator.Mods.Sekiro
             }
         }
 
+        /// <summary>
+        /// Async version of TryInstallMod with status reporting capability
+        /// </summary>
+        public async Task<bool> TryInstallModAsync(string destPath, Action<string>? statusUpdater = null)
+        {
+            try
+            {
+                statusUpdater?.Invoke("Extracting Sekiro Randomizer files...");
+                ZipFile.ExtractToDirectory(Path.Combine("Data", "Sekiro", ModFile), destPath, true);
+
+                // If we have saved configuration, run the mod with it
+                if (_savedConfiguration != null)
+                {
+                    statusUpdater?.Invoke("Running Sekiro Randomizer with configuration...");
+                    statusUpdater?.Invoke("Please wait while the randomizer configures and runs...");
+                    
+                    bool result = await Task.Run(() => RunWithConfiguration(_savedConfiguration, destPath));
+                    ModAutomationHelper.ModifyModEngineIni(destPath, "randomizer");
+                    
+                    if (result)
+                    {
+                        statusUpdater?.Invoke("Sekiro Randomizer completed successfully!");
+                    }
+                    else
+                    {
+                        statusUpdater?.Invoke("Sekiro Randomizer installation failed.");
+                    }
+                    
+                    return result;
+                }
+
+                statusUpdater?.Invoke("Sekiro Randomizer files extracted successfully!");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                statusUpdater?.Invoke($"Error: {ex.Message}");
+                return false;
+            }
+        }
+
         public bool TryRemoveMod(string destPath)
         {
             try
@@ -596,12 +635,12 @@ namespace SoulsConfigurator.Mods.Sekiro
 
         public List<UserPreset> GetUserPresets()
         {
-            return _presetService.LoadPresets(Name);
+            return UserPresetService.Instance.LoadPresets(Name);
         }
 
         public bool ApplyUserPreset(string presetName, string destPath)
         {
-            var preset = _presetService.GetPreset(Name, presetName);
+            var preset = UserPresetService.Instance.GetPreset(Name, presetName);
             if (preset == null)
                 return false;
 
@@ -945,7 +984,7 @@ namespace SoulsConfigurator.Mods.Sekiro
             // If a preset is selected, load its configuration
             if (!string.IsNullOrEmpty(presetName))
             {
-                var preset = _presetService.GetPreset(Name, presetName);
+                var preset = UserPresetService.Instance.GetPreset(Name, presetName);
                 if (preset != null)
                 {
                     SaveConfiguration(preset.OptionValues);
