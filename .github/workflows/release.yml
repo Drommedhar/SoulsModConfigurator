@@ -24,7 +24,7 @@ jobs:
     - name: Get current version
       id: get_version
       run: |
-        $csprojPath = "SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj"
+        $csprojPath = "SoulsConfigurator/SoulsModConfigurator/SoulsModConfigurator.csproj"
         $content = Get-Content $csprojPath -Raw
         $versionMatch = [regex]::Match($content, '<Version>(\d+)\.(\d+)\.(\d+)\.(\d+)</Version>')
         
@@ -43,7 +43,7 @@ jobs:
           $newVersion = "$major.$minor.$patch.$build"
           Write-Host "New version: $newVersion"
           
-          echo "OLD_VERSION=$major.$minor.$patch.$build" >> $env:GITHUB_OUTPUT
+          echo "OLD_VERSION=$major.$($minor-1).$patch.$build" >> $env:GITHUB_OUTPUT
           echo "NEW_VERSION=$newVersion" >> $env:GITHUB_OUTPUT
           echo "MAJOR=$major" >> $env:GITHUB_OUTPUT
           echo "MINOR=$minor" >> $env:GITHUB_OUTPUT
@@ -55,18 +55,27 @@ jobs:
         }
       shell: pwsh
 
-    - name: Update version in csproj
+    - name: Update version in both projects
       run: |
-        $csprojPath = "SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj"
-        $content = Get-Content $csprojPath -Raw
         $newVersion = "${{ steps.get_version.outputs.NEW_VERSION }}"
         
-        $content = $content -replace '<AssemblyVersion>\d+\.\d+\.\d+\.\d+</AssemblyVersion>', "<AssemblyVersion>$newVersion</AssemblyVersion>"
-        $content = $content -replace '<FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>', "<FileVersion>$newVersion</FileVersion>"
-        $content = $content -replace '<Version>\d+\.\d+\.\d+\.\d+</Version>', "<Version>$newVersion</Version>"
+        # Update library project
+        $libCsprojPath = "SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj"
+        $libContent = Get-Content $libCsprojPath -Raw
+        $libContent = $libContent -replace '<AssemblyVersion>\d+\.\d+\.\d+\.\d+</AssemblyVersion>', "<AssemblyVersion>$newVersion</AssemblyVersion>"
+        $libContent = $libContent -replace '<FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>', "<FileVersion>$newVersion</FileVersion>"
+        $libContent = $libContent -replace '<Version>\d+\.\d+\.\d+\.\d+</Version>', "<Version>$newVersion</Version>"
+        Set-Content $libCsprojPath -Value $libContent
+        Write-Host "Updated library project version to $newVersion"
         
-        Set-Content $csprojPath -Value $content
-        Write-Host "Updated version to $newVersion"
+        # Update WPF project
+        $wpfCsprojPath = "SoulsConfigurator/SoulsModConfigurator/SoulsModConfigurator.csproj"
+        $wpfContent = Get-Content $wpfCsprojPath -Raw
+        $wpfContent = $wpfContent -replace '<AssemblyVersion>\d+\.\d+\.\d+\.\d+</AssemblyVersion>', "<AssemblyVersion>$newVersion</AssemblyVersion>"
+        $wpfContent = $wpfContent -replace '<FileVersion>\d+\.\d+\.\d+\.\d+</FileVersion>', "<FileVersion>$newVersion</FileVersion>"
+        $wpfContent = $wpfContent -replace '<Version>\d+\.\d+\.\d+\.\d+</Version>', "<Version>$newVersion</Version>"
+        Set-Content $wpfCsprojPath -Value $wpfContent
+        Write-Host "Updated WPF project version to $newVersion"
       shell: pwsh
 
     - name: Restore dependencies
@@ -77,22 +86,51 @@ jobs:
 
     - name: Publish application
       run: |
-        dotnet publish SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj `
+        dotnet publish SoulsConfigurator/SoulsModConfigurator/SoulsModConfigurator.csproj `
           --configuration Release `
           --output "publish" `
           --no-build `
-          --self-contained false
+          --self-contained true `
+          --runtime win-x64 `
+          --framework net8.0-windows `
+          -p:PublishSingleFile=false `
+          -p:PublishTrimmed=false
 
     - name: Create release package
       run: |
         $version = "${{ steps.get_version.outputs.NEW_VERSION }}"
         $zipName = "SoulsModConfigurator-v$version.zip"
         
-        # Create zip file with the published application
-        Compress-Archive -Path "publish/*" -DestinationPath $zipName
+        # Ensure we have the published files
+        if (-not (Test-Path "publish")) {
+          Write-Error "Publish directory not found"
+          exit 1
+        }
+        
+        # List contents for debugging
+        Write-Host "Contents of publish directory:"
+        Get-ChildItem -Path "publish" -Recurse | ForEach-Object { Write-Host $_.FullName }
+        
+        # Create zip file with the published application contents
+        # Use -Force to ensure we get all files, and specify the contents directly
+        $publishFiles = Get-ChildItem -Path "publish" -Recurse
+        if ($publishFiles.Count -eq 0) {
+          Write-Error "No files found in publish directory"
+          exit 1
+        }
+        
+        Compress-Archive -Path "publish\*" -DestinationPath $zipName -Force
+        
+        # Verify zip was created and has content
+        if (Test-Path $zipName) {
+          $zipSize = (Get-Item $zipName).Length
+          Write-Host "Created release package: $zipName (Size: $zipSize bytes)"
+        } else {
+          Write-Error "Failed to create zip file"
+          exit 1
+        }
         
         echo "RELEASE_ZIP=$zipName" >> $env:GITHUB_OUTPUT
-        Write-Host "Created release package: $zipName"
       shell: pwsh
       id: package
 
@@ -101,37 +139,34 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add SoulsConfigurator/SoulsConfigurator/SoulsConfigurator.csproj
+        git add SoulsConfigurator/SoulsModConfigurator/SoulsModConfigurator.csproj
         git commit -m "[skip ci] Bump version to ${{ steps.get_version.outputs.NEW_VERSION }}" || exit 0
         git push
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.get_version.outputs.NEW_VERSION }}
-        release_name: Release v${{ steps.get_version.outputs.NEW_VERSION }}
+        name: Release v${{ steps.get_version.outputs.NEW_VERSION }}
         body: |
           ## Changes in v${{ steps.get_version.outputs.NEW_VERSION }}
           
-          This release was automatically generated.
+          This release was automatically generated and includes a self-contained Windows executable.
           
           ### What's New
           - Version bump from previous release
           - Latest bug fixes and improvements
           
-          ### Download
-          Download the `SoulsModConfigurator-v${{ steps.get_version.outputs.NEW_VERSION }}.zip` file below and extract it to use the application.
+          ### Download & Installation
+          1. Download the `SoulsModConfigurator-v${{ steps.get_version.outputs.NEW_VERSION }}.zip` file below
+          2. Extract the contents to a folder of your choice
+          3. Run `SoulsModConfigurator.exe` - no additional .NET installation required!
+          
+          ### System Requirements
+          - Windows 10/11 (x64)
+          - No additional software required (self-contained)
+        files: ${{ steps.package.outputs.RELEASE_ZIP }}
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./${{ steps.package.outputs.RELEASE_ZIP }}
-        asset_name: ${{ steps.package.outputs.RELEASE_ZIP }}
-        asset_content_type: application/zip
+        token: ${{ secrets.GITHUB_TOKEN }}
