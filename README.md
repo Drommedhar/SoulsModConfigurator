@@ -1,19 +1,19 @@
-# SoulsConfigurator
+# SoulsModConfigurator
 
 A comprehensive mod manager and configuration tool for Dark Souls games, designed to simplify the installation and configuration of randomizer mods.
 
 ## Overview
 
-SoulsConfigurator is a Windows Forms application built with .NET 8 that provides an intuitive interface for installing, configuring, and managing mods for Dark Souls games. The application automates the complex process of mod installation and configuration, making it accessible to users who want to enjoy randomized gameplay without dealing with technical details.
+SoulsModConfigurator is a WPF application built with .NET 8 that provides an intuitive interface for installing, configuring, and managing mods for Dark Souls games. The application automates the complex process of mod installation and configuration, making it accessible to users who want to enjoy randomized gameplay without dealing with technical details.
 
 ## Supported Games
 
-Currently, SoulsConfigurator supports:
+Currently, SoulsModConfigurator supports:
 
-- DS1
-- DS2
-- DS3
-- Sekiro
+- **Dark Souls: Remastered** (DS1R)
+- **Dark Souls II** (DS2)
+- **Dark Souls III** (DS3)
+- **Sekiro: Shadows Die Twice**
 
 ## Features
 
@@ -59,15 +59,15 @@ Currently, SoulsConfigurator supports:
 - Internet connection for automatic mod downloads
 
 ### Setup
-1. Download the latest release of SoulsConfigurator
+1. Download the latest release of SoulsModConfigurator
 2. Extract to a folder of your choice
-3. Run `SoulsConfigurator.exe`
+3. Run `SoulsModConfigurator.exe`
 4. Use the built-in download manager to automatically get mod files (recommended)
    - OR manually download and place the required mod files (see "Manual Mod Files Setup" section below)
 
 ## Automatic Mod Download
 
-SoulsConfigurator now includes an integrated download manager that can automatically download all required mod files from Nexus Mods (Premium required) and other sources.
+SoulsModConfigurator now includes an integrated download manager that can automatically download all required mod files from Nexus Mods (Premium required) and other sources.
 
 ## Manual Mod Files Setup
 
@@ -82,7 +82,6 @@ For that open the Download manager and after that click on `Manual Download`. Th
 
 1. **Select Your Game**: Choose a game from the game dropdown
 2. **Set Installation Path**: Click "Browse" and navigate to your installation folder
-3. **Verify Installation**: The status should show "Ready to install mods"
 
 ### Installing Mods
 
@@ -121,4 +120,7 @@ This project is provided as-is for educational and personal use. Users are respo
 - Special thanks to contributors who help improve and maintain this tool
 - A very special thanks to [Divi](https://www.twitch.tv/divi) who let's me use her Twitch Emotes and her community for the idea and testing
 
-- Also for DS1 I"m using my forks of [Dark-Souls-Enemy-Randomizer](https://github.com/Drommedhar/Dark-Souls-Enemy-Randomizer) and [DarkSoulsItemRandomizer](https://github.com/Drommedhar/DarkSoulsItemRandomizer) which are adjusted to allow CLI arguments and use INI files for configuration.
+- Also for DS1 I'm using my forks of [Dark-Souls-Enemy-Randomizer](https://github.com/Drommedhar/Dark-Souls-Enemy-Randomizer) and [DarkSoulsItemRandomizer](https://github.com/Drommedhar/DarkSoulsItemRandomizer) which are adjusted to allow CLI arguments and use INI files for configuration.
+
+## Support
+If you want to support me, feel free to [Buy me a Coffee](https://coff.ee/drommedhar) or donate over [PayPal](https://www.paypal.com/paypalme/drommedhar)
