@@ -124,3 +124,4 @@ This project is provided as-is for educational and personal use. Users are respo
 
 ## Support
 If you want to support me, feel free to [Buy me a Coffee](https://coff.ee/drommedhar) or donate over [PayPal](https://www.paypal.com/paypalme/drommedhar)
+Also if any original Mod developer wants to directly integrate their mods, feel free to to it and create a PR. Maybe we can have all of them in without the need to download files in the future.
