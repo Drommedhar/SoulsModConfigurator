@@ -125,3 +125,12 @@ This project is provided as-is for educational and personal use. Users are respo
 ## Support
 If you want to support me, feel free to [Buy me a Coffee](https://coff.ee/drommedhar) or donate over [PayPal](https://www.paypal.com/paypalme/drommedhar)
 Also if any original Mod developer wants to directly integrate their mods, feel free to to it and create a PR. Maybe we can have all of them in without the need to download files in the future.
+
+## Mods 'used'
+- [Dark Souls Enemy Randomizer](https://www.nexusmods.com/darksouls/mods/1407)
+- [Dark Souls Item Randomizer](https://www.nexusmods.com/darksoulsremastered/mods/86)
+- [Fog Gate Randomizer](https://www.nexusmods.com/darksoulsremastered/mods/165)
+- [Dark Souls II Randomizer (Enemy and Item)](https://www.nexusmods.com/darksouls2/mods/1317?tab=description)
+- [DS3 Static Item and Enemy Randomizer](https://www.nexusmods.com/darksouls3/mods/361)
+- [DS3 Fog Gate Randomizer](https://www.nexusmods.com/darksouls3/mods/551)
+- [Sekiro Enemy and Item Randomizer](https://www.nexusmods.com/sekiro/mods/543)
