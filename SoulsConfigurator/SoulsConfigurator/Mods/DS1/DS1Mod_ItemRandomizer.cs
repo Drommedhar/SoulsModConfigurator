@@ -623,11 +623,11 @@ namespace SoulsConfigurator.Mods.DS1
         private string? ConvertConfigValueToIniValue(string key, object value)
         {
             // Handle radio button groups
-            if (key.StartsWith("difficulty_"))
+            if (key.StartsWith("difficulty", StringComparison.OrdinalIgnoreCase))
             {
-                if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                if (value is JsonElement elem)
                 {
-                    return key switch
+                    return elem.GetString() switch
                     {
                         "difficulty_fair" => "0",
                         "difficulty_unfair" => "1", 
@@ -638,11 +638,11 @@ namespace SoulsConfigurator.Mods.DS1
                 return null; // Don't write if this radio button is not selected
             }
 
-            if (key.StartsWith("key_placement_"))
+            if (key.StartsWith("key placement", StringComparison.OrdinalIgnoreCase))
             {
-                if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                if (value is JsonElement elem)
                 {
-                    return key switch
+                    return elem.GetString() switch
                     {
                         "key_placement_not_shuffled" => "0",
                         "key_placement_shuffled" => "1",
@@ -654,11 +654,11 @@ namespace SoulsConfigurator.Mods.DS1
                 return null;
             }
 
-            if (key.StartsWith("soul_items_"))
+            if (key.StartsWith("soul items", StringComparison.OrdinalIgnoreCase))
             {
-                if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                if (value is JsonElement elem)
                 {
-                    return key switch
+                    return elem.GetString() switch
                     {
                         "soul_items_shuffled" => "0",
                         "soul_items_replaced" => "1",
@@ -669,11 +669,11 @@ namespace SoulsConfigurator.Mods.DS1
                 return null;
             }
 
-            if (key.StartsWith("lordvessel_"))
+            if (key.StartsWith("lordvessel", StringComparison.OrdinalIgnoreCase))
             {
-                if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                if (value is JsonElement elem)
                 {
-                    return key switch
+                    return elem.GetString() switch
                     {
                         "lordvessel_gwynevere" => "Gwynevere",
                         "lordvessel_randomized" => "Randomized",
@@ -684,11 +684,11 @@ namespace SoulsConfigurator.Mods.DS1
                 return null;
             }
 
-            if (key.StartsWith("start_items_"))
+            if (key.StartsWith("starting items", StringComparison.OrdinalIgnoreCase))
             {
-                if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                if (value is JsonElement elem)
                 {
-                    return key switch
+                    return elem.GetString() switch
                     {
                         "start_items_shield_1h" => "0",
                         "start_items_shield_12h" => "1",
