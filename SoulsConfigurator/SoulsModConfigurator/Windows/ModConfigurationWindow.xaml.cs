@@ -842,6 +842,63 @@ namespace SoulsModConfigurator.Windows
             DialogResult = false;
             Close();
         }
+        
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show("Are you sure you want to reset all values to their defaults?",
+                "Reset Configuration", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                ResetToDefaults();
+            }
+        }
+        
+        private void ResetToDefaults()
+        {
+            // Reset the configuration dictionary to default values
+            _currentConfiguration.Clear();
+            InitializeDefaultValues();
+            
+            // Reset all UI controls to match the default values
+            foreach (var option in _modConfiguration.Options)
+            {
+                if (option.ControlType == ModControlType.RadioButton)
+                {
+                    // Handle radio buttons
+                    if (option.RadioButtonGroup.Any() && _controls.TryGetValue(option.ControlName, out FrameworkElement? control) && 
+                        control is RadioButton radioButton)
+                    {
+                        radioButton.IsChecked = Convert.ToBoolean(option.DefaultValue);
+                    }
+                }
+                else if (_controls.TryGetValue(option.Name, out FrameworkElement? control))
+                {
+                    // Handle other control types
+                    switch (control)
+                    {
+                        case CheckBox checkBox:
+                            checkBox.IsChecked = Convert.ToBoolean(option.DefaultValue);
+                            break;
+                        case TextBox textBox:
+                            textBox.Text = option.DefaultValue?.ToString() ?? "";
+                            break;
+                        case Slider slider:
+                            slider.Value = Convert.ToDouble(option.DefaultValue);
+                            break;
+                        case ComboBox comboBox:
+                            comboBox.SelectedItem = option.DefaultValue;
+                            break;
+                    }
+                }
+            }
+            
+            // Keep the preset name if one is selected, as we might want to save the defaults to it
+            UpdateSaveButtonText();
+            
+            // Update the configuration dictionary with the reset values
+            UpdateConfiguration();
+        }
 
         private string? ShowInputDialog(string prompt, string title)
         {

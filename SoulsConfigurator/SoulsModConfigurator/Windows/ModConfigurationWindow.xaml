@@ -97,6 +97,10 @@
             <Button x:Name="DeletePresetButton" Grid.Column="3" Content="Delete"
                     Click="DeletePresetButton_Click"/>
 
+            <!-- Reset Button -->
+            <Button x:Name="ResetButton" Grid.Column="4" Content="Reset to Defaults" 
+                    Click="ResetButton_Click" Margin="20,0,0,0" HorizontalAlignment="Left"/>
+
             <!-- Action Buttons -->
             <Button x:Name="CancelButton" Grid.Column="5" Content="Cancel"
                     IsCancel="True" Click="CancelButton_Click"/>
