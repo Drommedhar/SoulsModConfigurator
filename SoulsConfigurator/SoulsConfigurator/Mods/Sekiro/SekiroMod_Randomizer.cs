@@ -738,13 +738,38 @@ namespace SoulsConfigurator.Mods.Sekiro
             // Add boolean options that are enabled
             foreach (var option in _configuration.Options)
             {
-                if (configuration.TryGetValue(option.Name, out object? value) && value != null)
+                if (option.ControlType == ModControlType.RadioButton)
                 {
-                    if (option.ControlType == ModControlType.CheckBox || option.ControlType == ModControlType.RadioButton)
+                    // For radio buttons, only add the selected one
+                    var value = configuration.Values.FirstOrDefault(v =>
                     {
-                        if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                        if (v is JsonElement elem && elem.ValueKind == JsonValueKind.String)
                         {
-                            options.Add(option.Name);
+                            string value = elem.GetString()?.Trim() ?? "";
+                            return option.Name.Equals(value, StringComparison.InvariantCultureIgnoreCase);
+                        }
+
+                        return false;
+                    });
+                    if (value != null)
+                    {
+                        string selectedOption = value.ToString()?.Trim() ?? "";
+                        if (option.RadioButtonGroup.Contains(selectedOption))
+                        {
+                            options.Add(selectedOption);
+                        }
+                    }
+                }
+                else
+                {
+                    if (configuration.TryGetValue(option.Name, out object? value) && value != null)
+                    {
+                        if (option.ControlType == ModControlType.CheckBox)
+                        {
+                            if (Convert.ToBoolean(((JsonElement)value).ValueKind.ToString()))
+                            {
+                                options.Add(option.Name);
+                            }
                         }
                     }
                 }

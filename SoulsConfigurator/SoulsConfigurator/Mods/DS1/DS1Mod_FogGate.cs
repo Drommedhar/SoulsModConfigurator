@@ -509,7 +509,7 @@ namespace SoulsConfigurator.Mods.DS1
                 }
             }
 
-            return string.Join(" ", options);
+            return string.Join(" ", options) + " V5";
         }
 
         private bool ModifyFogModUserConfig(string optionsString, string exePath, string pathDS1)

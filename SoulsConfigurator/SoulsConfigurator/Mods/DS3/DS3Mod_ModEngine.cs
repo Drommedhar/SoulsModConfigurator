@@ -63,6 +63,7 @@ namespace SoulsConfigurator.Mods.DS3
             {
                 File.Delete(Path.Combine(destPath, "dinput8.dll"));
                 File.Delete(Path.Combine(destPath, "modengine.ini"));
+                File.Delete(Path.Combine(destPath, "readme.txt"));
                 return true;
             }
             catch (Exception)

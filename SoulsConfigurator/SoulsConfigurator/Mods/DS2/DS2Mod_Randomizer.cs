@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using static System.Windows.Forms.Design.AxImporter;
 
 namespace SoulsConfigurator.Mods.DS2
 {
@@ -2929,6 +2930,23 @@ namespace SoulsConfigurator.Mods.DS2
                 }
                 return Convert.ToBoolean(value);
             }
+
+            // For radio buttons, only add the selected one
+            var value2 = configuration.Values.FirstOrDefault(v =>
+            {
+                if (v is JsonElement elem && elem.ValueKind == JsonValueKind.String)
+                {
+                    string value = elem.GetString()?.Trim() ?? "";
+                    return key.Equals(value, StringComparison.InvariantCultureIgnoreCase);
+                }
+
+                return false;
+            });
+            if (value2 != null)
+            {
+                return true;
+            }
+
             return defaultValue;
         }
 
