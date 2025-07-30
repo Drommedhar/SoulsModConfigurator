@@ -41,11 +41,11 @@ namespace SoulsModConfigurator.Controls
             InitializeComponent();
             _downloadService = new ModDownloadService();
             _nexusService = new NexusModsService();
-            
+
             _downloadService.DownloadProgress += OnDownloadProgress;
             _downloadService.DownloadCompleted += OnDownloadCompleted;
             _downloadService.DownloadFailed += OnDownloadFailed;
-            
+
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
             FindUIElements();
@@ -66,7 +66,7 @@ namespace SoulsModConfigurator.Controls
         private void SetupFileWatcher()
         {
             if (_fileWatcher != null) return;
-            
+
             try
             {
                 // Create Data directory if it doesn't exist
@@ -90,7 +90,7 @@ namespace SoulsModConfigurator.Controls
 
                 // Enable monitoring
                 _fileWatcher.EnableRaisingEvents = true;
-                
+
                 System.Diagnostics.Debug.WriteLine($"DownloadView file watcher setup for: {dataPath}");
             }
             catch (Exception ex)
@@ -143,24 +143,24 @@ namespace SoulsModConfigurator.Controls
         private bool IsRelevantModFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath)) return false;
-            
+
             try
             {
                 string fileName = System.IO.Path.GetFileName(filePath).ToLowerInvariant();
                 string directory = System.IO.Path.GetDirectoryName(filePath)?.ToLowerInvariant() ?? "";
-                
+
                 // Check if it's in a game-specific data folder
                 if (!directory.Contains("\\data\\") && !directory.Contains("/data/")) return false;
-                
+
                 // Check for common mod file extensions
-                if (fileName.EndsWith(".zip") || 
-                    fileName.EndsWith(".exe") || 
+                if (fileName.EndsWith(".zip") ||
+                    fileName.EndsWith(".exe") ||
                     fileName.EndsWith(".dll") ||
                     fileName.EndsWith(".ini"))
                 {
                     return true;
                 }
-                
+
                 return false;
             }
             catch
@@ -176,22 +176,22 @@ namespace SoulsModConfigurator.Controls
             {
                 _refreshTimer.Stop();
             }
-            
+
             _refreshTimer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(1000) // Increased delay to 1000ms
             };
-            
+
             _refreshTimer.Tick += (s, e) =>
             {
                 _refreshTimer?.Stop();
                 _refreshTimer = null;
                 UpdateMissingFiles();
             };
-            
+
             _refreshTimer.Start();
         }
-        
+
         private System.Windows.Threading.DispatcherTimer? _refreshTimer;
 
         private void FindUIElements()
@@ -214,42 +214,47 @@ namespace SoulsModConfigurator.Controls
 
         private async Task UpdateAuthenticationStatus()
         {
-            if (_downloadService.IsAuthenticated)
+            await Dispatcher.InvokeAsync(async () =>
             {
-                // Check for premium status
-                _isPremium = await CheckPremiumStatus();
-                
-                if (_isPremium)
+
+                if (_downloadService.IsAuthenticated)
                 {
-                    if (_statusIcon != null) _statusIcon.Text = "✓";
-                    if (_statusTitle != null) _statusTitle.Text = "Authenticated with Nexus Mods Premium";
-                    if (_statusDescription != null) _statusDescription.Text = "You can download mods automatically";
-                    if (_authButton != null) _authButton.Content = "Logout";
-                    if (_btnAutoDownload != null) _btnAutoDownload.IsEnabled = true;
-                    if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically";
-                    if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Collapsed;
+                    // Check for premium status
+                    _isPremium = await CheckPremiumStatus();
+
+                    if (_isPremium)
+                    {
+                        if (_statusIcon != null) _statusIcon.Text = "✓";
+                        if (_statusTitle != null) _statusTitle.Text = "Authenticated with Nexus Mods Premium";
+                        if (_statusDescription != null) _statusDescription.Text = "You can download mods automatically";
+                        if (_authButton != null) _authButton.Content = "Logout";
+                        if (_btnAutoDownload != null) _btnAutoDownload.IsEnabled = true;
+                        if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically";
+                        if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        if (_statusIcon != null) _statusIcon.Text = "✓";
+                        if (_statusTitle != null) _statusTitle.Text = "Authenticated with Nexus Mods (Free)";
+                        if (_statusDescription != null) _statusDescription.Text = "Premium subscription required for automatic downloads";
+                        if (_authButton != null) _authButton.Content = "Logout";
+                        if (_btnAutoDownload != null) _btnAutoDownload.IsEnabled = false;
+                        if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically (Premium required)";
+                        if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Visible;
+                    }
                 }
                 else
                 {
-                    if (_statusIcon != null) _statusIcon.Text = "✓";
-                    if (_statusTitle != null) _statusTitle.Text = "Authenticated with Nexus Mods (Free)";
-                    if (_statusDescription != null) _statusDescription.Text = "Premium subscription required for automatic downloads";
-                    if (_authButton != null) _authButton.Content = "Logout";
+                    if (_statusIcon != null) _statusIcon.Text = "⚠";
+                    if (_statusTitle != null) _statusTitle.Text = "Not Authenticated with Nexus Mods";
+                    if (_statusDescription != null) _statusDescription.Text = "Authenticate to enable automatic downloads from Nexus Mods";
+                    if (_authButton != null) _authButton.Content = "Authenticate with Nexus";
                     if (_btnAutoDownload != null) _btnAutoDownload.IsEnabled = false;
-                    if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically (Premium required)";
-                    if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Visible;
+                    if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically (Authentication required)";
+                    if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Collapsed;
                 }
-            }
-            else
-            {
-                if (_statusIcon != null) _statusIcon.Text = "⚠";
-                if (_statusTitle != null) _statusTitle.Text = "Not Authenticated with Nexus Mods";
-                if (_statusDescription != null) _statusDescription.Text = "Authenticate to enable automatic downloads from Nexus Mods";
-                if (_authButton != null) _authButton.Content = "Authenticate with Nexus";
-                if (_btnAutoDownload != null) _btnAutoDownload.IsEnabled = false;
-                if (_autoDownloadDescription != null) _autoDownloadDescription.Text = "Download all required mods automatically (Authentication required)";
-                if (_premiumWarningPanel != null) _premiumWarningPanel.Visibility = Visibility.Collapsed;
-            }
+
+            });
         }
 
         private async Task<bool> CheckPremiumStatus()
@@ -278,7 +283,7 @@ namespace SoulsModConfigurator.Controls
             {
                 // Show loading using simple message box for now
                 var success = await _downloadService.AuthenticateAsync();
-                
+
                 if (success)
                 {
                     await UpdateAuthenticationStatus();
@@ -305,13 +310,13 @@ namespace SoulsModConfigurator.Controls
             var game = GetSelectedGame();
             var mainWindow = Window.GetWindow(this) as MainWindow;
             var overlay = mainWindow?.FindName("pnlInfo") as OverlayPanel;
-            
+
             if (overlay == null)
             {
                 MessageBox.Show("Could not access overlay panel", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            
+
             try
             {
                 // Disable button during download
@@ -319,34 +324,34 @@ namespace SoulsModConfigurator.Controls
                 {
                     btn.IsEnabled = false;
                 }
-                
+
                 // Get total file count for progress tracking with validation
                 var totalFiles = _downloadService.GetTotalFileCount(game);
                 if (totalFiles <= 0)
                 {
                     totalFiles = 1; // Fallback to prevent division by zero
                 }
-                
+
                 var currentFileIndex = 1;
-                
+
                 // Show the download overlay with initial status
                 overlay.ShowDownloadProgress(currentFileIndex, totalFiles);
-                
+
                 // Subscribe to download progress events
                 _downloadService.DownloadProgress += OnDownloadProgressUpdate;
                 _downloadService.DownloadCompleted += OnDownloadCompletedUpdate;
                 _downloadService.DownloadFailed += OnDownloadFailedUpdate;
-                
+
                 var success = await _downloadService.DownloadAllForGameAsync(game);
-                
+
                 // Unsubscribe from events
                 _downloadService.DownloadProgress -= OnDownloadProgressUpdate;
                 _downloadService.DownloadCompleted -= OnDownloadCompletedUpdate;
                 _downloadService.DownloadFailed -= OnDownloadFailedUpdate;
-                
+
                 // Hide download progress overlay
                 overlay.HideDownloadProgress();
-                
+
                 // Show completion notification
                 if (success)
                 {
@@ -360,7 +365,7 @@ namespace SoulsModConfigurator.Controls
                         "Some files could not be downloaded. Check the missing files list.",
                         "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_3bddbb609de94c67a8ac7f6f898a844c/default/dark/1.0");
                 }
-                
+
                 UpdateMissingFiles();
             }
             catch (Exception ex)
@@ -369,7 +374,7 @@ namespace SoulsModConfigurator.Controls
                 _downloadService.DownloadProgress -= OnDownloadProgressUpdate;
                 _downloadService.DownloadCompleted -= OnDownloadCompletedUpdate;
                 _downloadService.DownloadFailed -= OnDownloadFailedUpdate;
-                
+
                 // Hide download progress overlay safely
                 try
                 {
@@ -379,7 +384,7 @@ namespace SoulsModConfigurator.Controls
                 {
                     System.Diagnostics.Debug.WriteLine($"Error hiding download progress: {hideEx.Message}");
                 }
-                
+
                 overlay.ShowNotification("Download Error",
                     $"An error occurred during download: {ex.Message}",
                     "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_3bddbb609de94c67a8ac7f6f898a844c/default/dark/1.0");
@@ -435,26 +440,26 @@ namespace SoulsModConfigurator.Controls
             try
             {
                 System.Diagnostics.Debug.WriteLine("Check Files Again clicked - processing all games");
-                
+
                 // Process expected filenames for all games to handle files downloaded with different names
                 var game = GetSelectedGame();  // Get the current game
                 System.Diagnostics.Debug.WriteLine($"Creating expected filenames for {game}...");
                 await _downloadService.CreateExpectedFilenamesForGame(game);
                 System.Diagnostics.Debug.WriteLine("Expected filenames processing complete");
-                
+
                 // Small delay after filename processing
                 await Task.Delay(500);
-                
+
                 // Update missing files for the current game
                 UpdateMissingFiles();
-                
+
                 // Also notify that files should be re-checked across all game views
                 FilesChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error in BtnCheckFiles_Click: {ex.Message}");
-                
+
                 // Still try to update the UI even if processing fails
                 UpdateMissingFiles();
                 FilesChanged?.Invoke(this, EventArgs.Empty);
@@ -468,7 +473,7 @@ namespace SoulsModConfigurator.Controls
             if (_rbDS2 != null) _rbDS2.Checked += (s, e) => UpdateMissingFiles();
             if (_rbDS3 != null) _rbDS3.Checked += (s, e) => UpdateMissingFiles();
             if (_rbSekiro != null) _rbSekiro.Checked += (s, e) => UpdateMissingFiles();
-            
+
             UpdateMissingFiles();
         }
 
@@ -476,14 +481,14 @@ namespace SoulsModConfigurator.Controls
         {
             var game = GetSelectedGame();
             var missingFiles = _downloadService.GetMissingFiles(game);
-            
+
             // Debug output
             System.Diagnostics.Debug.WriteLine($"UpdateMissingFiles for {game}: Found {missingFiles.Count} missing files");
             foreach (var file in missingFiles)
             {
                 System.Diagnostics.Debug.WriteLine($"  Missing: {file}");
             }
-            
+
             if (missingFiles.Any())
             {
                 if (_missingFilesPanel != null)
