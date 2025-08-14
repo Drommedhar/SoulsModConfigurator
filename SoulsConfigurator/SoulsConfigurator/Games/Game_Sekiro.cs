@@ -58,16 +58,6 @@ namespace SoulsConfigurator.Games
                 return false;
             }
 
-            if (!_combinedSFX.TryInstallMod(_installPath))
-            {
-                return false;
-            }
-
-            if (!_divineDragonTextures.TryInstallMod(_installPath))
-            {
-                return false;
-            }
-
             // Then install selected mods
             foreach (var mod in mods)
             {
@@ -75,6 +65,16 @@ namespace SoulsConfigurator.Games
                 {
                     return false;
                 }
+            }
+
+            if (!_combinedSFX.TryInstallMod(Path.Combine(_installPath, "randomizer")))
+            {
+                return false;
+            }
+
+            if (!_divineDragonTextures.TryInstallMod(Path.Combine(_installPath, "randomizer")))
+            {
+                return false;
             }
 
             return true;
@@ -127,12 +127,12 @@ namespace SoulsConfigurator.Games
             statusUpdater?.Invoke("Installing prerequisite: Sekiro Combined SFX");
             if (_combinedSFX is SekiroMod_CombinedSFX combinedSFX && combinedSFX.TryInstallModAsync != null)
             {
-                if (!await combinedSFX.TryInstallModAsync(_installPath, statusUpdater))
+                if (!await combinedSFX.TryInstallModAsync(Path.Combine(_installPath, "randomizer"), statusUpdater))
                 {
                     return false;
                 }
             }
-            else if (!_combinedSFX.TryInstallMod(_installPath))
+            else if (!_combinedSFX.TryInstallMod(Path.Combine(_installPath, "randomizer")))
             {
                 return false;
             }
@@ -140,12 +140,12 @@ namespace SoulsConfigurator.Games
             statusUpdater?.Invoke("Installing prerequisite: Sekiro Divine Dragon Textures");
             if (_divineDragonTextures is SekiroMod_DivineDragonTextures textures && textures.TryInstallModAsync != null)
             {
-                if (!await textures.TryInstallModAsync(_installPath, statusUpdater))
+                if (!await textures.TryInstallModAsync(Path.Combine(_installPath, "randomizer"), statusUpdater))
                 {
                     return false;
                 }
             }
-            else if (!_divineDragonTextures.TryInstallMod(_installPath))
+            else if (!_divineDragonTextures.TryInstallMod(Path.Combine(_installPath, "randomizer")))
             {
                 return false;
             }

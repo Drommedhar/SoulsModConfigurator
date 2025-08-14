@@ -72,19 +72,6 @@ namespace SoulsConfigurator.Mods.Sekiro
         {
             try
             {
-                // Remove SFX files - typically in sound folders
-                string[] dirsToRemove = {
-                    Path.Combine(destPath, "sound"),
-                    Path.Combine(destPath, "sfx")
-                };
-
-                foreach (string dir in dirsToRemove)
-                {
-                    if (Directory.Exists(dir))
-                    {
-                        Directory.Delete(dir, true);
-                    }
-                }
                 return true;
             }
             catch (Exception)

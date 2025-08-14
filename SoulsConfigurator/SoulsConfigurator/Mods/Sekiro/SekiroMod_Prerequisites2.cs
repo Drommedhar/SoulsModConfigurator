@@ -72,20 +72,6 @@ namespace SoulsConfigurator.Mods.Sekiro
         {
             try
             {
-                // Remove texture files - typically in texture/graphics folders
-                string[] dirsToRemove = {
-                    Path.Combine(destPath, "parts"),
-                    Path.Combine(destPath, "chr"),
-                    Path.Combine(destPath, "textures")
-                };
-
-                foreach (string dir in dirsToRemove)
-                {
-                    if (Directory.Exists(dir))
-                    {
-                        Directory.Delete(dir, true);
-                    }
-                }
                 return true;
             }
             catch (Exception)
