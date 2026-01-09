@@ -1,4 +1,4 @@
-# SoulsModConfigurator
+test# SoulsModConfigurator
 
 A comprehensive mod manager and configuration tool for Dark Souls games, designed to simplify the installation and configuration of randomizer mods.
 
