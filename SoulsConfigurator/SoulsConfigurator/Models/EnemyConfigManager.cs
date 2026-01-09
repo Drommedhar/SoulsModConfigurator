@@ -11,6 +11,7 @@ namespace SoulsConfigurator.Models
     public class EnemyEntry
     {
         public string ID { get; set; } = string.Empty;
+		public string Keks { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public int Type { get; set; }
         public bool IsIgnored { get; set; }
